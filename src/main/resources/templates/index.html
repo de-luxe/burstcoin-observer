@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+
+    <head>
+        <title>Burstcoin Network</title>
+        <meta http-equiv="refresh" content="7; URL=http://localhost:1111" />
+        <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/style.css}"/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    </head>
+
+    <body>
+        <div th:each="row,iterStat : ${rows}">
+            <span th:text="${row}"/>
+        </div>
+    </body>
+</html>

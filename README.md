@@ -1,9 +1,10 @@
 # burstcoin-network-observer
-Simple webpage ... that refreshes every few seconds and shows the current miningInfo of given wallets/pools.
+Simple webservice ... that refreshes every few seconds and shows the current miningInfo of given wallets/pools.
 
 Features:
 - Checks all given pools/wallets for their current state 
 - Easy to run with included standalone tomcat server.
+- json api via '/json' in url.
 
 Requirements:
 - java8

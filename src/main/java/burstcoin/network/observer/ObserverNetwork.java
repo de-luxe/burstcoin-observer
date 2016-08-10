@@ -45,7 +45,7 @@ public class ObserverNetwork
 {
   private static Log LOG = LogFactory.getLog(ObserverNetwork.class);
 
-  private static long lastBlockHeight = 0;
+//  private static long lastBlockHeight = 0;
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -62,10 +62,10 @@ public class ObserverNetwork
     // check reference for new block
     MiningInfo miningInfo = getMiningInfo(ObserverProperties.getReferenceWalletServer());
 
-    if(miningInfo != null && (lastBlockHeight == 0 || miningInfo.getHeight() != lastBlockHeight))
+    if(miningInfo != null) //  && (lastBlockHeight == 0 || miningInfo.getHeight() != lastBlockHeight)
     {
       Map<String, MiningInfo> miningInfoLookup = new HashMap<>();
-      lastBlockHeight = miningInfo.getHeight();
+//      lastBlockHeight = miningInfo.getHeight();
 
       // update compare wallets data
       for(String compareWalletServer : ObserverProperties.getCompareWalletServers())
@@ -74,6 +74,10 @@ public class ObserverNetwork
         if(compareMiningInfo != null)
         {
           miningInfoLookup.put(compareWalletServer, compareMiningInfo);
+        }
+        else
+        {
+          miningInfoLookup.put(compareWalletServer, null);
         }
       }
       publisher.publishEvent(new MiningInfoUpdateEvent(miningInfo, miningInfoLookup));
@@ -120,7 +124,7 @@ public class ObserverNetwork
       }
       catch(Exception e)
       {
-        LOG.warn("Unable to get mining info from wallet: " + e.getMessage());
+        LOG.warn("Unable to get mining info from wallet for '"+server+"': " + e.getMessage());
       }
     }
 

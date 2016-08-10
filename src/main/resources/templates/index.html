@@ -2,15 +2,52 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
     <head>
-        <title>Burstcoin Network</title>
-        <meta http-equiv="refresh" content="7; URL=http://localhost:1111" />
+        <title>Burstcoin Network Observer</title>
+        <meta http-equiv="refresh" content="7; URL=http://localhost:1111"/>
         <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/style.css}"/>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     </head>
 
     <body>
-        <div th:each="row,iterStat : ${rows}">
-            <span th:text="${row}"/>
+
+
+        <div class="container">
+            <div class="jumbotron">
+
+                <h1 class="display-3">Burstcoin Network Observer</h1>
+
+                <p class="lead">This page updates every 8 seconds and should provide a quick overview of Burstcoin network.</p>
+
+                <table class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Block</th>
+                            <th>BaseTarget</th>
+                            <th>Type</th>
+                            <th>Domain</th>
+                            <th>GenSig</th>
+                            <th>TargetDeadline</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="infoBean,iterStat : ${infoBeans}">
+                            <th scope="row" th:text="${infoBean.height}"></th>
+                            <td th:text="${infoBean.baseTarget}"></td>
+                            <td th:text="${infoBean.type}"></td>
+                            <td th:text="${infoBean.domain}"></td>
+                            <td th:text="${infoBean.generationSignature}"></td>
+                            <td th:text="${infoBean.targetDeadline}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <br/>
+                <br/>
+                <!--<p class="lead">-->
+                <a class="btn btn-primary" href="https://github.com/de-luxe/burstcoin-network-observer/releases">burstcoin-network-observer-0.1.0-RELEASE</a>
+                <!--</p>-->
+            </div>
         </div>
+
+
     </body>
 </html>

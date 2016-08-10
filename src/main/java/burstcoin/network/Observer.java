@@ -66,6 +66,10 @@ public class Observer
   public HttpClient httpClient()
   {
     HttpClient client = new HttpClient(new SslContextFactory(true));
+//    client.getProxyConfiguration().getProxies().add(new Socks4Proxy("212.57.179.29",2214));
+//    client.getProxyConfiguration().getProxies().add(new HttpProxy("124.248.237.250",80));
+//    client.getProxyConfiguration().getProxies().add(new HttpProxy("37.11.246.154",8080));
+//    client.getProxyConfiguration().getProxies().add(new HttpProxy("119.202.173.240",80));
     try
     {
       client.start();

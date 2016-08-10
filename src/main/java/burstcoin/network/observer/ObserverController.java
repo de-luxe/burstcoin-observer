@@ -24,13 +24,17 @@ package burstcoin.network.observer;
 
 import burstcoin.network.ObserverProperties;
 import burstcoin.network.observer.event.MiningInfoUpdateEvent;
+import burstcoin.network.observer.model.InfoBean;
 import burstcoin.network.observer.model.MiningInfo;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -50,23 +54,56 @@ public class ObserverController
   @RequestMapping("/")
   public String index(Model model)
   {
-    List<String> rows = new ArrayList<>();
-    if(referenceMiningInfo != null)
-    {
-      rows.add(format(ObserverProperties.getReferenceWalletServer().replace("http://", ""), referenceMiningInfo));
-      for(Map.Entry<String, MiningInfo> entry : compareMiningInfoLookup.entrySet())
-      {
-        rows.add(format(entry.getKey().replace("http://", ""), entry.getValue()));
-      }
-    }
-    model.addAttribute("rows", rows);
+    List<InfoBean> infoBeans = getInfoBeans();
+
+    model.addAttribute("infoBeans", infoBeans);
 
     return "index";
   }
 
-  private String format(String server, MiningInfo miningInfo)
+  @RequestMapping(value = "/json", produces = "application/json")
+  @ResponseBody
+  public List<InfoBean> json()
   {
-    return "block: '" + miningInfo.getHeight() + "' - '" + server + "'"
-           + " (targetDeadline: '" + miningInfo.getTargetDeadline() + "',  baseTarget: '" + miningInfo.getBaseTarget() + "')";
+    return getInfoBeans();
+  }
+
+  private List<InfoBean> getInfoBeans()
+  {
+    List<InfoBean> infoBeans = new ArrayList<>();
+    if(referenceMiningInfo != null)
+    {
+      infoBeans.add(new InfoBean(String.valueOf(referenceMiningInfo.getHeight()),
+                                 ObserverProperties.getReferenceWalletServer().replace("http://", "").replace("https://", ""),
+                                 referenceMiningInfo.getBaseTarget(), referenceMiningInfo.getGenerationSignature().substring(0, 25) + "...",
+                                 String.valueOf(referenceMiningInfo.getTargetDeadline())));
+
+      for(Map.Entry<String, MiningInfo> entry : compareMiningInfoLookup.entrySet())
+      {
+        MiningInfo miningInfo = entry.getValue();
+
+        String domain = entry.getKey().replace("http://", "").replace("https://", "");
+        if(miningInfo != null && miningInfo.getGenerationSignature() != null)
+        {
+          infoBeans.add(new InfoBean(String.valueOf(miningInfo.getHeight()), domain, miningInfo.getBaseTarget(),
+                                     miningInfo.getGenerationSignature().substring(0, 25) + "...",
+                                     String.valueOf(miningInfo.getTargetDeadline())));
+        }
+        else
+        {
+          infoBeans.add(new InfoBean(domain));
+        }
+      }
+    }
+
+    Collections.sort(infoBeans, new Comparator<InfoBean>()
+    {
+      @Override
+      public int compare(InfoBean o1, InfoBean o2)
+      {
+        return o2.getHeight().compareTo(o1.getHeight());
+      }
+    });
+    return infoBeans;
   }
 }

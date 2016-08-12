@@ -20,7 +20,7 @@
  *
  */
 
-package burstcoin.network;
+package burstcoin.observer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
@@ -30,15 +30,14 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
 
 @SpringBootApplication
-@EnableScheduling
 public class Observer
 {
   private static Log LOG = LogFactory.getLog(Observer.class);
@@ -66,10 +65,8 @@ public class Observer
   public HttpClient httpClient()
   {
     HttpClient client = new HttpClient(new SslContextFactory(true));
-//    client.getProxyConfiguration().getProxies().add(new Socks4Proxy("212.57.179.29",2214));
-//    client.getProxyConfiguration().getProxies().add(new HttpProxy("124.248.237.250",80));
-//    client.getProxyConfiguration().getProxies().add(new HttpProxy("37.11.246.154",8080));
-//    client.getProxyConfiguration().getProxies().add(new HttpProxy("119.202.173.240",80));
+    // use tor socks proxy
+//    client.getProxyConfiguration().getProxies().add(new Socks4Proxy("127.0.0.1",9050));
     try
     {
       client.start();
@@ -87,6 +84,13 @@ public class Observer
     return new ObjectMapper();
   }
 
+
+  @Bean
+  public Timer timer()
+  {
+    return new Timer();
+  }
+
   public static void main(String[] args)
     throws Exception
   {
@@ -94,7 +98,7 @@ public class Observer
 
     // overwritten by application.properties
     Map<String, Object> properties = new HashMap<String, Object>();
-    properties.put("server.port", ObserverProperties.getServerPort());
+    properties.put("server.port", ObserverProperties.getObserverPort());
 
     new SpringApplicationBuilder(Observer.class)
       .properties(properties)

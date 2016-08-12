@@ -3,15 +3,16 @@ Simple webservice ... that refreshes every few seconds and shows the current min
 
 Features:
 - Checks all given pools/wallets for their current state 
+- Proivides pool Stats
 - Easy to run with included standalone tomcat server.
-- json api via '/json' in url.
+- API for JSON and JSONP
 
 Requirements:
 - java8
 
 Setup:
 - edit 'observer.properties' (e.g. rename observer.default.properties) 
-- edit templates/index.html within *-jar archive -> use your domain for refresh url!!!!! (quick and dirty)
+
 
 
 

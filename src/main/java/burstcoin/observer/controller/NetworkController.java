@@ -20,16 +20,18 @@
  *
  */
 
-package burstcoin.network.observer;
+package burstcoin.observer.controller;
 
-import burstcoin.network.ObserverProperties;
-import burstcoin.network.observer.event.MiningInfoUpdateEvent;
-import burstcoin.network.observer.model.InfoBean;
-import burstcoin.network.observer.model.MiningInfo;
+import burstcoin.observer.ObserverProperties;
+import burstcoin.observer.event.NetworkMiningInfoUpdateEvent;
+import burstcoin.observer.model.InfoBean;
+import burstcoin.observer.model.MiningInfo;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
@@ -39,46 +41,19 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-public class ObserverController
+public class NetworkController
 {
-  private static Map<String, MiningInfo> compareMiningInfoLookup;
-  private static MiningInfo referenceMiningInfo;
+  private List<InfoBean> infoBeans;
 
   @EventListener
-  public void handleMessage(MiningInfoUpdateEvent event)
+  public void handleMessage(NetworkMiningInfoUpdateEvent event)
   {
-    compareMiningInfoLookup = event.getCompareMiningInfoLookup();
-    referenceMiningInfo = event.getReferenceMiningInfo();
-  }
+    Map<String, MiningInfo> miningInfoLookup = event.getMiningInfoLookup();
 
-  @RequestMapping("/")
-  public String index(Model model)
-  {
-    List<InfoBean> infoBeans = getInfoBeans();
-
-    model.addAttribute("infoBeans", infoBeans);
-
-    return "index";
-  }
-
-  @RequestMapping(value = "/json", produces = "application/json")
-  @ResponseBody
-  public List<InfoBean> json()
-  {
-    return getInfoBeans();
-  }
-
-  private List<InfoBean> getInfoBeans()
-  {
-    List<InfoBean> infoBeans = new ArrayList<>();
-    if(referenceMiningInfo != null)
+    infoBeans = new ArrayList<>();
+    if(miningInfoLookup != null)
     {
-      infoBeans.add(new InfoBean(String.valueOf(referenceMiningInfo.getHeight()),
-                                 ObserverProperties.getReferenceWalletServer().replace("http://", "").replace("https://", ""),
-                                 referenceMiningInfo.getBaseTarget(), referenceMiningInfo.getGenerationSignature().substring(0, 25) + "...",
-                                 String.valueOf(referenceMiningInfo.getTargetDeadline())));
-
-      for(Map.Entry<String, MiningInfo> entry : compareMiningInfoLookup.entrySet())
+      for(Map.Entry<String, MiningInfo> entry : miningInfoLookup.entrySet())
       {
         MiningInfo miningInfo = entry.getValue();
 
@@ -104,6 +79,39 @@ public class ObserverController
         return o2.getHeight().compareTo(o1.getHeight());
       }
     });
-    return infoBeans;
+
+
+    // todo to determ there is a fork
+    // 1. genSig for same block differ (for 4+ blocks)
+    // 2. blockHeight differs (for 4+ blocks)
+  }
+
+  @RequestMapping({"/","/network"})
+  public String index(Model model)
+  {
+    model.addAttribute("refreshContent", ObserverProperties.getNetworkRefreshInterval() / 1000 + 1 + "; URL=" + ObserverProperties.getObserverUrl());
+    if(infoBeans != null)
+    {
+      model.addAttribute("interval", ObserverProperties.getNetworkRefreshInterval() / 1000);
+      model.addAttribute("infoBeans", infoBeans);
+    }
+    return "index";
+  }
+
+  @RequestMapping(value = "/network/json", produces = "application/json")
+  @ResponseBody
+  public List<InfoBean> json()
+  {
+    return infoBeans != null ? infoBeans : new ArrayList<>();
+  }
+
+  @RequestMapping(value = "/network/jsonp", produces = "application/json")
+  @ResponseBody
+  public MappingJacksonValue jsonp(@RequestParam String callback)
+  {
+    callback = callback == null || callback.equals("") ? "callback" : callback;
+    MappingJacksonValue value = new MappingJacksonValue(infoBeans != null ? infoBeans : new ArrayList<>());
+    value.setJsonpFunction(callback);
+    return value;
   }
 }

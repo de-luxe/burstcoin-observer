@@ -20,7 +20,7 @@
  *
  */
 
-package burstcoin.network.observer.model;
+package burstcoin.observer.model;
 
 import java.io.Serializable;
 

@@ -20,7 +20,7 @@
  *
  */
 
-package burstcoin.network;
+package burstcoin.observer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +28,8 @@ import org.springframework.util.StringUtils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,53 +53,83 @@ public class ObserverProperties
     }
   }
 
-  private static String referenceWalletServer;
-  private static String serverPort;
-  private static List<String> compareWalletServers;
+  private static URL observerUrl;
+  private static String walletUrl;
+  private static Integer networkRefreshInterval;
   private static Integer connectionTimeout;
+  private static List<String> networkServers;
 
-
-  public static String getServerPort()
+  public static Integer getObserverPort()
   {
-    if(serverPort == null)
+    if(observerUrl == null)
     {
-      serverPort = asString("burstcoin.network.serverPort", "8080");
+      parseObserverUrl();
     }
-    return serverPort;
+    return observerUrl.getPort();
   }
 
-  public static String getReferenceWalletServer()
+  public static String getObserverUrl()
   {
-    if(referenceWalletServer == null)
+    if(observerUrl == null)
     {
-      referenceWalletServer = asString("burstcoin.network.referenceWalletServer", "http://localhost:8125");
+      parseObserverUrl();
     }
-    return referenceWalletServer;
+    return observerUrl.toString();
   }
 
-  public static List<String> getCompareWalletServers()
+  public static String getWalletUrl()
   {
-    if(compareWalletServers == null)
+    if(walletUrl == null)
     {
-      compareWalletServers = asStringList("burstcoin.network.compareWalletServers", new ArrayList<>());
-      if(compareWalletServers.isEmpty())
+      walletUrl   = asString("burstcoin.observer.walletUrl", "http://localhost:8125");
+    }
+    return walletUrl;
+  }
+
+  public static List<String> getNetworkServerUrls()
+  {
+    if(networkServers == null)
+    {
+      networkServers = asStringList("burstcoin.observer.network.serverUrls", new ArrayList<>());
+      if(networkServers.isEmpty())
       {
-        LOG.error("Error: property 'burstcoin.network.compareWalletServers' required!  ");
+        LOG.error("Error: property 'burstcoin.observer.network.serverUrls' required!");
       }
     }
+    return networkServers;
+  }
 
-    return compareWalletServers;
+  public static Integer getNetworkRefreshInterval()
+  {
+    if(networkRefreshInterval == null)
+    {
+      networkRefreshInterval = asInteger("burstcoin.observer.network.refreshInterval", 8000);
+    }
+    return networkRefreshInterval;
   }
 
   public static long getConnectionTimeout()
   {
     if(connectionTimeout == null)
     {
-      connectionTimeout = asInteger("connectionTimeout", 12000);
+      connectionTimeout = asInteger("burstcoin.observer.connectionTimeout", 12000);
     }
     return connectionTimeout;
   }
 
+
+  private static void parseObserverUrl()
+  {
+    String hostString = asString("burstcoin.observer.url", "http://localhost:1111");
+    try
+    {
+      observerUrl = new URL(hostString);
+    }
+    catch(MalformedURLException e)
+    {
+      LOG.error("Could not parse 'burstcoin.observer.url' should be likme 'http://host:port': "+e.getMessage());
+    }
+  }
 
   private static int asInteger(String key, int defaultValue)
   {

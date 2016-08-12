@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+
+    <head>
+        <title>Burstcoin Pools</title>
+
+        <meta http-equiv="refresh" th:content="${refreshContent}"/>
+        <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/style.css}"/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    </head>
+
+    <body>
+        <div class="container">
+
+            <nav class="navbar navbar-light bg-faded">
+                <ul class="nav navbar-nav">
+                    <li class="nav-item ">
+                        <a class="nav-link" href="/">Network</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/pool">Pools<span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item pull-xs-right">
+                        <a class="nav-link" href="https://github.com/de-luxe/burstcoin-network-observer/releases">Github</a>
+                    </li>
+                    <li class="nav-item pull-xs-right">
+                        <a class="nav-link" href="/api">API</a>
+                    </li>
+
+                </ul>
+
+            </nav>
+
+            <div class="jumbotron">
+
+                <h1 class="display-3">Burstcoin Pools</h1>
+
+                <p class="lead">This page updates every 5 minutes and shows the Burstcoin Pool-Situation over the last 10 days (3600 Blocks).</p>
+
+                <table class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>AccountId</th>
+                            <th>Name</th>
+                            <th>Blocks mined</th>
+                            <th>Blockfinder</th>
+                            <th>Miners</th>
+                            <th>Earnings</th>
+                            <th>Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="poolInfo,iterStat : ${poolInfos}" data-toggle="tooltip" th:title="${poolInfo.description}">
+                            <td th:text="${poolInfo.accountRS}"></td>
+                            <td th:text="${poolInfo.name}" ></td>
+                            <th scope="row" th:text="${poolInfo.foundBlocks}"></th>
+                            <td th:text="${poolInfo.successfulMiners}"></td>
+                            <td th:text="${poolInfo.assignedMiners}"></td>
+                            <td th:text="${poolInfo.earnedAmount}"></td>
+                            <td th:text="${poolInfo.balance}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="lead">The stats are not 100% correct.<br/>All found blocks of a miner, within the 10 days period, are counted for the pool a miner is currently assigned to.</p>
+            </div>
+        </div>
+
+    </body>
+</html>

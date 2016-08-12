@@ -20,30 +20,15 @@
  *
  */
 
-package burstcoin.network.observer.event;
+package burstcoin.observer.model;
 
-import burstcoin.network.observer.model.MiningInfo;
-
-import java.util.Map;
-
-public class MiningInfoUpdateEvent
+public class RewardRecipient
+  extends IsResponse
 {
-  private MiningInfo referenceMiningInfo;
-  private Map<String, MiningInfo> compareMiningInfoLookup;
+  protected String rewardRecipient;
 
-  public MiningInfoUpdateEvent(MiningInfo referenceMiningInfo, Map<String, MiningInfo> compareMiningInfoLookup)
+  public String getRewardRecipient()
   {
-    this.referenceMiningInfo = referenceMiningInfo;
-    this.compareMiningInfoLookup = compareMiningInfoLookup;
-  }
-
-  public MiningInfo getReferenceMiningInfo()
-  {
-    return referenceMiningInfo;
-  }
-
-  public Map<String, MiningInfo> getCompareMiningInfoLookup()
-  {
-    return compareMiningInfoLookup;
+    return rewardRecipient;
   }
 }

@@ -20,11 +20,11 @@
  *
  */
 
-package burstcoin.network.observer;
+package burstcoin.observer.service;
 
-import burstcoin.network.ObserverProperties;
-import burstcoin.network.observer.model.MiningInfo;
-import burstcoin.network.observer.event.MiningInfoUpdateEvent;
+import burstcoin.observer.ObserverProperties;
+import burstcoin.observer.event.NetworkMiningInfoUpdateEvent;
+import burstcoin.observer.model.MiningInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,20 +32,20 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Component
-public class ObserverNetwork
+public class NetworkService
 {
-  private static Log LOG = LogFactory.getLog(ObserverNetwork.class);
-
-//  private static long lastBlockHeight = 0;
+  private static Log LOG = LogFactory.getLog(NetworkService.class);
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -56,32 +56,43 @@ public class ObserverNetwork
   @Autowired
   private ApplicationEventPublisher publisher;
 
-  @Scheduled(initialDelay = 100, fixedRate = 6000)
-  public void checkReferenceWallet()
+  @Autowired
+  private Timer timer;
+
+  @PostConstruct
+  private void postConstruct()
   {
-    // check reference for new block
-    MiningInfo miningInfo = getMiningInfo(ObserverProperties.getReferenceWalletServer());
+    LOG.info("Started repeating 'check network' task.");
+    startCheckNetworkTask();
+  }
 
-    if(miningInfo != null) //  && (lastBlockHeight == 0 || miningInfo.getHeight() != lastBlockHeight)
+  private void startCheckNetworkTask()
+  {
+    timer.schedule(new TimerTask()
     {
-      Map<String, MiningInfo> miningInfoLookup = new HashMap<>();
-//      lastBlockHeight = miningInfo.getHeight();
-
-      // update compare wallets data
-      for(String compareWalletServer : ObserverProperties.getCompareWalletServers())
+      @Override
+      public void run()
       {
-        MiningInfo compareMiningInfo = getMiningInfo(compareWalletServer);
-        if(compareMiningInfo != null)
+        Map<String, MiningInfo> miningInfoLookup = new HashMap<>();
+
+        // update compare wallets data
+        for(String networkServerUrls : ObserverProperties.getNetworkServerUrls())
         {
-          miningInfoLookup.put(compareWalletServer, compareMiningInfo);
+          MiningInfo miningInfo = getMiningInfo(networkServerUrls);
+          if(miningInfo != null)
+          {
+            miningInfoLookup.put(networkServerUrls, miningInfo);
+          }
+          else
+          {
+            miningInfoLookup.put(networkServerUrls, null);
+          }
         }
-        else
-        {
-          miningInfoLookup.put(compareWalletServer, null);
-        }
+        publisher.publishEvent(new NetworkMiningInfoUpdateEvent(miningInfoLookup));
       }
-      publisher.publishEvent(new MiningInfoUpdateEvent(miningInfo, miningInfoLookup));
-    }
+    }, ObserverProperties.getNetworkRefreshInterval());
+
+
   }
 
   private MiningInfo getMiningInfo(String server)

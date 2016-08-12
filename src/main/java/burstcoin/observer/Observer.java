@@ -37,7 +37,6 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
 
 @SpringBootApplication
 public class Observer
@@ -95,13 +94,6 @@ public class Observer
   public ObjectMapper objectMapper()
   {
     return new ObjectMapper();
-  }
-
-
-  @Bean
-  public Timer timer()
-  {
-    return new Timer();
   }
 
   public static void main(String[] args)

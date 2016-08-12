@@ -56,8 +56,7 @@ public class NetworkService
   @Autowired
   private ApplicationEventPublisher publisher;
 
-  @Autowired
-  private Timer timer;
+  private Timer timer = new Timer();
 
   @PostConstruct
   private void postConstruct()
@@ -90,9 +89,7 @@ public class NetworkService
         }
         publisher.publishEvent(new NetworkMiningInfoUpdateEvent(miningInfoLookup));
       }
-    }, ObserverProperties.getNetworkRefreshInterval());
-
-
+    }, 200, ObserverProperties.getNetworkRefreshInterval());
   }
 
   private MiningInfo getMiningInfo(String server)

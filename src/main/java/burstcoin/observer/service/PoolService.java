@@ -48,10 +48,7 @@ public class PoolService
   @Autowired
   private ApplicationEventPublisher publisher;
 
-  //  @Autowired
   private Timer timer = new Timer();
-
-  // temp
   private List<Block> blocks;
 
   @PostConstruct

@@ -69,17 +69,15 @@ public class NetworkController
           infoBeans.add(new InfoBean(domain));
         }
       }
-    }
-
-    Collections.sort(infoBeans, new Comparator<InfoBean>()
-    {
-      @Override
-      public int compare(InfoBean o1, InfoBean o2)
+      Collections.sort(infoBeans, new Comparator<InfoBean>()
       {
-        return o2.getHeight().compareTo(o1.getHeight());
-      }
-    });
-
+        @Override
+        public int compare(InfoBean o1, InfoBean o2)
+        {
+          return o2.getHeight().compareTo(o1.getHeight());
+        }
+      });
+    }
 
     // todo to determ there is a fork
     // 1. genSig for same block differ (for 4+ blocks)

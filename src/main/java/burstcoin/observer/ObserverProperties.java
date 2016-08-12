@@ -59,6 +59,38 @@ public class ObserverProperties
   private static Integer connectionTimeout;
   private static List<String> networkServers;
 
+  private static Boolean enableProxy;
+  private static Boolean useSocksProxy;
+  private static Integer proxyPort;
+  private static String proxyHost;
+
+  public static boolean isEnableProxy()
+  {
+    if(enableProxy == null)
+    {
+      enableProxy = asBoolean("burstcoin.observer.enableProxy", false);
+    }
+    return enableProxy;
+  }
+
+  public static boolean isUseSocksProxy()
+  {
+    if(useSocksProxy == null)
+    {
+      useSocksProxy = asBoolean("burstcoin.observer.useSocksProxy", true);
+    }
+    return useSocksProxy;
+  }
+
+  public static Integer getProxyPort()
+  {
+    if(proxyPort == null)
+    {
+      proxyPort = asInteger("burstcoin.observer.proxyPort", 9050);
+    }
+    return proxyPort;
+  }
+
   public static Integer getObserverPort()
   {
     if(observerUrl == null)
@@ -81,9 +113,18 @@ public class ObserverProperties
   {
     if(walletUrl == null)
     {
-      walletUrl   = asString("burstcoin.observer.walletUrl", "http://localhost:8125");
+      walletUrl = asString("burstcoin.observer.walletUrl", "http://localhost:8125");
     }
     return walletUrl;
+  }
+
+  public static String getProxyHost()
+  {
+    if(proxyHost == null)
+    {
+      proxyHost = asString("burstcoin.observer.proxyHost", "127.0.0.1");
+    }
+    return proxyHost;
   }
 
   public static List<String> getNetworkServerUrls()
@@ -127,7 +168,7 @@ public class ObserverProperties
     }
     catch(MalformedURLException e)
     {
-      LOG.error("Could not parse 'burstcoin.observer.url' should be likme 'http://host:port': "+e.getMessage());
+      LOG.error("Could not parse 'burstcoin.observer.url' should be like 'http://host:port': " + e.getMessage());
     }
   }
 
@@ -165,6 +206,24 @@ public class ObserverProperties
       }
     }
 
+    return value != null ? value : defaultValue;
+  }
+
+  private static Boolean asBoolean(String key, boolean defaultValue)
+  {
+    String booleanProperty = PROPS.containsKey(key) ? String.valueOf(PROPS.getProperty(key)) : null;
+    Boolean value = null;
+    if(!StringUtils.isEmpty(booleanProperty))
+    {
+      try
+      {
+        value = Boolean.valueOf(booleanProperty);
+      }
+      catch(Exception e)
+      {
+        LOG.error("property: '" + key + "' value should be of type 'boolean' (e.g. 'true' or 'false').");
+      }
+    }
     return value != null ? value : defaultValue;
   }
 

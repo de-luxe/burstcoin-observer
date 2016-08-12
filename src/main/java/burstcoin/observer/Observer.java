@@ -26,6 +26,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpProxy;
+import org.eclipse.jetty.client.Socks4Proxy;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -65,8 +67,19 @@ public class Observer
   public HttpClient httpClient()
   {
     HttpClient client = new HttpClient(new SslContextFactory(true));
-    // use tor socks proxy
-//    client.getProxyConfiguration().getProxies().add(new Socks4Proxy("127.0.0.1",9050));
+
+    if(ObserverProperties.isEnableProxy())
+    {
+      if(ObserverProperties.isUseSocksProxy())
+      {
+        client.getProxyConfiguration().getProxies().add(new Socks4Proxy(ObserverProperties.getProxyHost(), ObserverProperties.getProxyPort()));
+      }
+      else
+      {
+        client.getProxyConfiguration().getProxies().add(new HttpProxy(ObserverProperties.getProxyHost(), ObserverProperties.getProxyPort()));
+      }
+    }
+
     try
     {
       client.start();

@@ -57,7 +57,7 @@ public class PoolService
   @PostConstruct
   private void postConstruct()
   {
-    LOG.info("Started repeating 'check network' task.");
+    LOG.info("Started repeating 'check pools' task.");
     startCheckPoolsTask();
   }
 

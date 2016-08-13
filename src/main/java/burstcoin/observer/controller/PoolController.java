@@ -49,7 +49,7 @@ public class PoolController
   public String pool(Model model)
   {
     // todo interval
-    model.addAttribute("refreshContent", "120; URL=" + ObserverProperties.getObserverUrl());
+    model.addAttribute("refreshContent", "120; URL=" + ObserverProperties.getObserverUrl()+"/pool");
     model.addAttribute("poolInfos", poolInfos);
 
     return "pool";

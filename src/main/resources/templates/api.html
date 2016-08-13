@@ -18,6 +18,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/pool">Pools</a>
                     </li>
+                    <li class="nav-item ">
+                        <a class="nav-link" href="/asset">Assets</a>
+                    </li>
                     <li class="nav-item pull-xs-right">
                         <a class="nav-link" href="https://github.com/de-luxe/burstcoin-network-observer/releases">Github</a>
                     </li>
@@ -32,7 +35,7 @@
 
                 <h1 class="display-3">API</h1>
 
-                <p class="lead">The data for Network and Pools is also available via JSON or JSONP</p>
+                <p class="lead">All data is also available via JSON or JSONP</p>
 
                 <h2>Network data</h2>
                 <p class="lead"><span th:text="${observerUrl}"></span>/network/json</p>
@@ -41,6 +44,10 @@
                 <h2>Pool data</h2>
                 <p class="lead"><span th:text="${observerUrl}"></span>/pool/json</p>
                 <p class="lead"><span th:text="${observerUrl}"></span>/pool/jsonp?callback=callbackName</p>
+
+                <h2>Asset data</h2>
+                <p class="lead"><span th:text="${observerUrl}"></span>/asset/json</p>
+                <p class="lead"><span th:text="${observerUrl}"></span>/asset/jsonp?callback=callbackName</p>
 
             </div>
         </div>

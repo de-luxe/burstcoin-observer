@@ -1,0 +1,23 @@
+<nav class="navbar navbar-light bg-faded">
+    <ul class="nav navbar-nav">
+        <li th:each="nl,iterStat : ${navigation.left}" class="nav-item">
+            <a th:unless="${nl != navigation.active}" class="nav-link active" th:text="${nl.name}" th:href="${nl.href}"><span class="sr-only">(current)</span></a>
+            <a th:unless="${nl == navigation.active}" class="nav-link" th:text="${nl.name}" th:href="${nl.href}"></a>
+        </li>
+        <li th:each="rl,iterStat : ${navigation.right}" class="nav-item pull-xs-right">
+            <a th:unless="${rl != navigation.active}" class="nav-link active" th:text="${rl.name}" th:href="${rl.href}"><span class="sr-only">(current)</span></a>
+            <a th:unless="${rl == navigation.active}" class="nav-link" th:text="${rl.name}" th:href="${rl.href}"></a>
+        </li>
+    </ul>
+
+    <script th:unless="${analyticsCode == null}" th:inline="javascript">
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+        ga('create', [[${analyticsCode}]], 'auto');
+        ga('send', 'pageview');
+
+    </script>
+</nav>

@@ -31,6 +31,10 @@ public class InfoBean
   private String targetDeadline;
   private String type;
 
+  private Boolean fork;
+
+  private Boolean available;
+
   public InfoBean(String domain)
   {
     this.domain = domain;
@@ -39,6 +43,7 @@ public class InfoBean
     this.baseTarget = "";
     this.generationSignature = "";
     this.targetDeadline = "";
+    this.available = false;
   }
 
   public InfoBean(String height, String domain, String baseTarget, String generationSignature, String targetDeadline)
@@ -47,9 +52,11 @@ public class InfoBean
     this.domain = domain;
     this.baseTarget = baseTarget;
     this.generationSignature = generationSignature;
+    this.fork = false;
+    this.available = true;
 
     // week impl. wallet with pool in domain will show up as pool
-    this.type = targetDeadline.equals("0") ? domain.contains("pool") ? "Pool" : "Wallet" : "Pool";
+    this.type = targetDeadline.equals("0") ? domain.contains("faucet") ? "Faucet" : "Wallet" : "Pool";
     this.targetDeadline = targetDeadline.equals("0") ? "Pool".equals(type) ? "Unlimited" : "N/A" : targetDeadline;
   }
 
@@ -81,5 +88,20 @@ public class InfoBean
   public String getType()
   {
     return type;
+  }
+
+  public Boolean getFork()
+  {
+    return fork;
+  }
+
+  public void setFork(Boolean fork)
+  {
+    this.fork = fork;
+  }
+
+  public Boolean getAvailable()
+  {
+    return available;
   }
 }

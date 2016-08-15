@@ -30,6 +30,7 @@ import burstcoin.observer.model.asset.AssetInfo;
 import burstcoin.observer.model.asset.Order;
 import burstcoin.observer.model.asset.OrderType;
 import burstcoin.observer.model.asset.Trade;
+import burstcoin.observer.model.navigation.NavigationPoint;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.stereotype.Controller;
@@ -47,6 +48,7 @@ import java.util.Map;
 
 @Controller
 public class AssetController
+  extends BaseController
 {
   private List<AssetInfo> assetInfos = new ArrayList<>();
 
@@ -151,6 +153,7 @@ public class AssetController
   @RequestMapping("/asset")
   public String pool(Model model)
   {
+    addNavigationBean(NavigationPoint.ASSET, model);
     // todo interval
     model.addAttribute("refreshContent", "240; URL=" + ObserverProperties.getObserverUrl() + "/asset");
     if(assetInfos != null)

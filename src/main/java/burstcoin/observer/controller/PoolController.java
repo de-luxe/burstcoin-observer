@@ -24,6 +24,7 @@ package burstcoin.observer.controller;
 import burstcoin.observer.ObserverProperties;
 import burstcoin.observer.event.PoolInfoUpdateEvent;
 import burstcoin.observer.model.PoolInfo;
+import burstcoin.observer.model.navigation.NavigationPoint;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.stereotype.Controller;
@@ -36,6 +37,7 @@ import java.util.List;
 
 @Controller
 public class PoolController
+  extends BaseController
 {
   private List<PoolInfo> poolInfos;
 
@@ -48,8 +50,10 @@ public class PoolController
   @RequestMapping("/pool")
   public String pool(Model model)
   {
+    addNavigationBean(NavigationPoint.POOL, model);
+
     // todo interval
-    model.addAttribute("refreshContent", "120; URL=" + ObserverProperties.getObserverUrl()+"/pool");
+    model.addAttribute("refreshContent", "120; URL=" + ObserverProperties.getObserverUrl() + "/pool");
     model.addAttribute("poolInfos", poolInfos);
 
     return "pool";
@@ -75,6 +79,7 @@ public class PoolController
   @RequestMapping("/api")
   public String index(Model model)
   {
+    addNavigationBean(NavigationPoint.API, model);
     model.addAttribute("observerUrl", ObserverProperties.getObserverUrl());
 
     return "api";

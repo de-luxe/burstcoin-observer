@@ -53,16 +53,81 @@ public class ObserverProperties
     }
   }
 
+  private static String analyticsCode;
   private static URL observerUrl;
   private static String walletUrl;
   private static Integer networkRefreshInterval;
+  private static Integer poolRefreshInterval;
+  private static Integer assetRefreshInterval;
   private static Integer connectionTimeout;
   private static List<String> networkServers;
+
+  private static Boolean enableForkNotify;
+  private static String mailReceiver;
+  private static String mailProtocol;
+  private static String mailHost;
+  private static Integer mailPort;
+  private static String mailUsername;
+  private static String mailPassword;
 
   private static Boolean enableProxy;
   private static Boolean useSocksProxy;
   private static Integer proxyPort;
   private static String proxyHost;
+
+  public static String getMailReceiver()
+  {
+    if(mailReceiver == null)
+    {
+      mailReceiver = asString("burstcoin.observer.mail.receiver", "");
+    }
+    return mailReceiver;
+  }
+
+  public static String getMailProtocol()
+  {
+    if(mailProtocol == null)
+    {
+      mailProtocol = asString("burstcoin.observer.mail.protocol", "smtp");
+    }
+    return mailProtocol;
+  }
+
+  public static String getMailHost()
+  {
+    if(mailHost == null)
+    {
+      mailHost = asString("burstcoin.observer.mail.host", "localhost");
+    }
+    return mailHost;
+  }
+
+  public static String getMailUsername()
+  {
+    if(mailUsername == null)
+    {
+      mailUsername = asString("burstcoin.observer.mail.username", "");
+    }
+    return mailUsername;
+  }
+
+  public static String getMailPassword()
+  {
+    if(mailPassword == null)
+    {
+      mailPassword = asString("burstcoin.observer.mail.password", "");
+    }
+    return mailPassword;
+  }
+
+  public static String getAnalyticsCode()
+  {
+    if(analyticsCode == null)
+    {
+      analyticsCode = asString("burstcoin.observer.analytics", "");
+    }
+    return analyticsCode;
+  }
 
   public static boolean isEnableProxy()
   {
@@ -71,6 +136,15 @@ public class ObserverProperties
       enableProxy = asBoolean("burstcoin.observer.enableProxy", false);
     }
     return enableProxy;
+  }
+
+  public static boolean isEnableForkNotify()
+  {
+    if(enableForkNotify == null)
+    {
+      enableForkNotify = asBoolean("burstcoin.observer.mail.enableForkNotify", false);
+    }
+    return enableForkNotify;
   }
 
   public static boolean isUseSocksProxy()
@@ -89,6 +163,15 @@ public class ObserverProperties
       proxyPort = asInteger("burstcoin.observer.proxyPort", 9050);
     }
     return proxyPort;
+  }
+
+  public static Integer getMailPort()
+  {
+    if(mailPort == null)
+    {
+      mailPort = asInteger("burstcoin.observer.mail.port", 25);
+    }
+    return mailPort;
   }
 
   public static Integer getObserverPort()
@@ -147,6 +230,24 @@ public class ObserverProperties
       networkRefreshInterval = asInteger("burstcoin.observer.network.refreshInterval", 8000);
     }
     return networkRefreshInterval;
+  }
+
+  public static Integer getPoolRefreshInterval()
+  {
+    if(poolRefreshInterval == null)
+    {
+      poolRefreshInterval = asInteger("burstcoin.observer.pool.refreshInterval", 1000 * 60 * 5);
+    }
+    return poolRefreshInterval;
+  }
+
+  public static Integer getAssetRefreshInterval()
+  {
+    if(assetRefreshInterval == null)
+    {
+      assetRefreshInterval = asInteger("burstcoin.observer.asset.refreshInterval", 1000 * 60 * 10);
+    }
+    return assetRefreshInterval;
   }
 
   public static long getConnectionTimeout()

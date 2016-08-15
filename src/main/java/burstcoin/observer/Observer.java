@@ -104,15 +104,11 @@ public class Observer
     // overwritten by application.properties
     Map<String, Object> properties = new HashMap<String, Object>();
     properties.put("server.port", ObserverProperties.getObserverPort());
-
-    if(ObserverProperties.isEnableForkNotify())
-    {
-      properties.put("spring.mail.protocol", ObserverProperties.getMailProtocol());
-      properties.put("spring.mail.host", ObserverProperties.getMailHost());
-      properties.put("spring.mail.port", ObserverProperties.getMailPort());
-      properties.put("spring.mail.username", ObserverProperties.getMailUsername());
-      properties.put("spring.mail.password", ObserverProperties.getMailPassword());
-    }
+    properties.put("spring.mail.protocol", ObserverProperties.getMailProtocol());
+    properties.put("spring.mail.host", ObserverProperties.getMailHost());
+    properties.put("spring.mail.port", ObserverProperties.getMailPort());
+    properties.put("spring.mail.username", ObserverProperties.getMailUsername());
+    properties.put("spring.mail.password", ObserverProperties.getMailPassword());
 
     new SpringApplicationBuilder(Observer.class)
       .properties(properties)

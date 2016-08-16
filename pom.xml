@@ -11,8 +11,8 @@
 
   <name>burstcoin-observer</name>
   <groupId>burstcoin</groupId>
-  <artifactId>burstcoin-network-observer</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
+  <artifactId>burstcoin-observer</artifactId>
+  <version>0.2.2-SNAPSHOT</version>
 
   <properties>
     <java.version>1.8</java.version>

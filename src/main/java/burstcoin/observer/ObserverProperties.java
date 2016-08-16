@@ -59,6 +59,7 @@ public class ObserverProperties
   private static Integer networkRefreshInterval;
   private static Integer poolRefreshInterval;
   private static Integer assetRefreshInterval;
+  private static Integer crowdfundRefreshInterval;
   private static Integer connectionTimeout;
   private static List<String> networkServers;
 
@@ -248,6 +249,15 @@ public class ObserverProperties
       assetRefreshInterval = asInteger("burstcoin.observer.asset.refreshInterval", 1000 * 60 * 10);
     }
     return assetRefreshInterval;
+  }
+
+  public static Integer getCrowdfundRefreshInterval()
+  {
+    if(crowdfundRefreshInterval == null)
+    {
+      crowdfundRefreshInterval = asInteger("burstcoin.observer.crowdfund.refreshInterval", 1000 * 60 * 30);
+    }
+    return crowdfundRefreshInterval;
   }
 
   public static long getConnectionTimeout()

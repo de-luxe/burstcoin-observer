@@ -20,35 +20,33 @@
  *
  */
 
-package burstcoin.observer.model.navigation;
+package burstcoin.observer.event;
 
-public enum NavigationPoint
+
+import burstcoin.observer.model.State;
+import burstcoin.observer.model.at.AutomatedTransaction;
+
+import java.util.Map;
+
+public class ATDataUpdateEvent
 {
-  NETWORK("Network", "/network"),
-  POOL("Pool", "/pool"),
-  ASSET("Asset", "/asset"),
-  CROWDFUND("Crowdfund", "/crowdfund"),
+  // atId -> AutomatedTransaction
+  private Map<String, AutomatedTransaction> atLookup;
+  private State state;
 
-  API("API", "/api"),
-  GITHUB("Github", "https://github.com/de-luxe/burstcoin-network-observer/releases");
-
-  private String href;
-  private String name;
-
-  NavigationPoint(String name, String href)
+  public ATDataUpdateEvent(State state, Map<String, AutomatedTransaction> atLookup)
   {
-
-    this.href = href;
-    this.name = name;
+    this.state = state;
+    this.atLookup = atLookup;
   }
 
-  public String getHref()
+  public State getState()
   {
-    return href;
+    return state;
   }
 
-  public String getName()
+  public Map<String, AutomatedTransaction> getAtLookup()
   {
-    return name;
+    return atLookup;
   }
 }

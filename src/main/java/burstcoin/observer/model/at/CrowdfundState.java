@@ -20,35 +20,12 @@
  *
  */
 
-package burstcoin.observer.model.navigation;
+package burstcoin.observer.model.at;
 
-public enum NavigationPoint
+
+public enum CrowdfundState
 {
-  NETWORK("Network", "/network"),
-  POOL("Pool", "/pool"),
-  ASSET("Asset", "/asset"),
-  CROWDFUND("Crowdfund", "/crowdfund"),
-
-  API("API", "/api"),
-  GITHUB("Github", "https://github.com/de-luxe/burstcoin-network-observer/releases");
-
-  private String href;
-  private String name;
-
-  NavigationPoint(String name, String href)
-  {
-
-    this.href = href;
-    this.name = name;
-  }
-
-  public String getHref()
-  {
-    return href;
-  }
-
-  public String getName()
-  {
-    return name;
-  }
+  ACTIVE,
+  FUNDED,
+  NOT_FUNDED
 }

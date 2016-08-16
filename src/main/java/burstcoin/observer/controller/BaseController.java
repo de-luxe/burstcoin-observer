@@ -40,6 +40,7 @@ public class BaseController
     left.add(NavigationPoint.NETWORK);
     left.add(NavigationPoint.POOL);
     left.add(NavigationPoint.ASSET);
+    left.add(NavigationPoint.CROWDFUND);
 
     List<NavigationPoint> right = new ArrayList<>();
     right.add(NavigationPoint.API);

@@ -1,4 +1,26 @@
 <!DOCTYPE HTML>
+<!--
+  ~ The MIT License (MIT)
+  ~
+  ~ Copyright (c) 2016 by luxe - https://github.com/de-luxe - BURST-LUXE-RED2-G6JW-H4HG5
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+  ~ and associated documentation files (the "Software"), to deal in the Software without restriction,
+  ~ including without limitation the rights to use, copy, modify, merge, publish, distribute,
+  ~ sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
+  ~ is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies
+  ~ or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+  ~ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  ~ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  ~ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  ~ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  ~
+  -->
+
 <html xmlns:th="http://www.thymeleaf.org">
 
     <head>
@@ -7,6 +29,7 @@
         <meta http-equiv="refresh" th:content="${refreshContent}"/>
         <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/style.css}"/>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     </head>
 
     <body>
@@ -18,12 +41,13 @@
 
                 <h1 class="display-3">Burstcoin Pools</h1>
 
-                <p class="lead">This page updates every 5 minutes and shows the Burstcoin Pool-Situation over the last 10 days (3600 Blocks).</p>
+                <p class="lead">This page updates every <span th:text="${interval / 60}"></span> minutes and shows the Burstcoin Pool-Situation over the last 10
+                    days (3600 Blocks).</p>
 
                 <table class="table table-hover table-striped">
                     <thead>
                         <tr>
-                            <th>AccountId</th>
+                            <th>Pool AccountID</th>
                             <th>Name</th>
                             <th>Blocks mined</th>
                             <th>Blockfinder</th>
@@ -35,16 +59,17 @@
                     <tbody>
                         <tr th:each="poolInfo,iterStat : ${poolInfos}" data-toggle="tooltip" th:title="${poolInfo.description}">
                             <td th:text="${poolInfo.accountRS}"></td>
-                            <td th:text="${poolInfo.name}" ></td>
+                            <td th:text="${poolInfo.name}"></td>
                             <th scope="row" th:text="${poolInfo.foundBlocks}"></th>
                             <td th:text="${poolInfo.successfulMiners}"></td>
                             <td th:text="${poolInfo.assignedMiners}"></td>
-                            <td th:text="${poolInfo.earnedAmount}"></td>
-                            <td th:text="${poolInfo.balance}"></td>
+                            <td th:text="${#numbers.formatInteger(poolInfo.earnedAmount,0,'DEFAULT')}"></td>
+                            <td th:text="${#numbers.formatInteger(poolInfo.balance,0,'DEFAULT')}"></td>
                         </tr>
                     </tbody>
                 </table>
-                <p class="lead">The stats are not 100% correct.<br/>All found blocks of a miner, within the 10 days period, are counted for the pool a miner is currently assigned to.</p>
+                <p class="lead">The stats are not 100% correct.<br/>All found blocks of a miner, within the 10 days period, are counted for the pool a miner is
+                    currently assigned to.</p>
             </div>
         </div>
 

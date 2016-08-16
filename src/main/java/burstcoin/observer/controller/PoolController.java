@@ -52,8 +52,8 @@ public class PoolController
   {
     addNavigationBean(NavigationPoint.POOL, model);
 
-    // todo interval
-    model.addAttribute("refreshContent", "120; URL=" + ObserverProperties.getObserverUrl() + "/pool");
+    model.addAttribute("refreshContent", ObserverProperties.getPoolRefreshInterval() / 1000 + 1 + "; URL=" + ObserverProperties.getObserverUrl() + "/pool");
+    model.addAttribute("interval", ObserverProperties.getPoolRefreshInterval() / 1000);
     model.addAttribute("poolInfos", poolInfos);
 
     return "pool";

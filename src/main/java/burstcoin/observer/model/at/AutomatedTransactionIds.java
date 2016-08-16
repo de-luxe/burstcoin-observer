@@ -20,35 +20,26 @@
  *
  */
 
-package burstcoin.observer.model.navigation;
+package burstcoin.observer.model.at;
 
-public enum NavigationPoint
+import java.util.List;
+
+public class AutomatedTransactionIds
 {
-  NETWORK("Network", "/network"),
-  POOL("Pool", "/pool"),
-  ASSET("Asset", "/asset"),
-  CROWDFUND("Crowdfund", "/crowdfund"),
+  private int requestProcessingTime;
+  private List<String> atIds;
 
-  API("API", "/api"),
-  GITHUB("Github", "https://github.com/de-luxe/burstcoin-network-observer/releases");
-
-  private String href;
-  private String name;
-
-  NavigationPoint(String name, String href)
+  public AutomatedTransactionIds()
   {
-
-    this.href = href;
-    this.name = name;
   }
 
-  public String getHref()
+  public int getRequestProcessingTime()
   {
-    return href;
+    return requestProcessingTime;
   }
 
-  public String getName()
+  public List<String> getAtIds()
   {
-    return name;
+    return atIds;
   }
 }

@@ -61,7 +61,7 @@ public class NetworkController
   private Map<Long, Map<String, Set<String>>> genSigLookup = new HashMap<>();
   private Long lastBlockWithSameGenSig;
   private boolean forkMailSend = false;
-
+  private Long lastBlockWithSameGenSigMailSend = 0L;
 
   @EventListener
   public void handleMessage(NetworkMiningInfoUpdateEvent event)
@@ -87,6 +87,14 @@ public class NetworkController
           infoBeans.add(new InfoBean(domain));
         }
       }
+      Collections.sort(infoBeans, new Comparator<InfoBean>()
+      {
+        @Override
+        public int compare(InfoBean o1, InfoBean o2)
+        {
+          return o1.getBaseTarget().compareTo(o2.getBaseTarget());
+        }
+      });
       Collections.sort(infoBeans, new Comparator<InfoBean>()
       {
         @Override
@@ -120,7 +128,6 @@ public class NetworkController
       {
         // N/A
         numberOfNotAvailableDomains++;
-
       }
     }
 
@@ -133,13 +140,17 @@ public class NetworkController
     while(iterator.hasNext() && lastBlockWithSameGenSig == null)
     {
       Long nextHeight = iterator.next();
-      if(genSigLookup.get(nextHeight).size() == 1 // only one known genSig for height
-         // number of domains with same genSig = all domains without N/A
-         && infoBeans.size() - numberOfNotAvailableDomains == genSigLookup.get(nextHeight).values().iterator().next().size())
+      if(genSigLookup.get(nextHeight).size() == 1) // only one known genSig for height
       {
-        lastBlockWithSameGenSig = nextHeight;
+        // number of domains with same genSig = all domains without N/A
+        if(infoBeans.size() - numberOfNotAvailableDomains == genSigLookup.get(nextHeight).values().iterator().next().size())
+        {
+          lastBlockWithSameGenSig = nextHeight;
+        }
       }
     }
+
+    boolean appStartedAfterForkHappened = lastBlockWithSameGenSig == null;
 
     boolean sendMail = false;
     for(InfoBean infoBean : infoBeans)
@@ -158,10 +169,13 @@ public class NetworkController
 
     if(sendMail && !forkMailSend)
     {
-      forkMailSend = true;
-
-      if(ObserverProperties.isEnableForkNotify())
+      if(ObserverProperties.isEnableForkNotify()
+         && appStartedAfterForkHappened || (lastBlockWithSameGenSigMailSend != null  && !lastBlockWithSameGenSig.equals(lastBlockWithSameGenSigMailSend)))
       {
+        forkMailSend = true;
+        // ensure only one mail send per lastBlockWithSameGenSig e.g. if forked wallet pops off blocks over and over again
+        lastBlockWithSameGenSigMailSend = lastBlockWithSameGenSig;
+
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(ObserverProperties.getMailReceiver());
         mailMessage.setReplyTo("do-not-reply@burst-team.us");
@@ -171,7 +185,7 @@ public class NetworkController
         mailSender.send(mailMessage);
       }
     }
-    else if(!sendMail)
+    else if(!sendMail && !appStartedAfterForkHappened)
     {
       forkMailSend = false;
     }
@@ -182,9 +196,9 @@ public class NetworkController
   {
     addNavigationBean(NavigationPoint.NETWORK, model);
     model.addAttribute("refreshContent", ObserverProperties.getNetworkRefreshInterval() / 1000 + 1 + "; URL=" + ObserverProperties.getObserverUrl());
+    model.addAttribute("interval", ObserverProperties.getNetworkRefreshInterval() / 1000);
     if(infoBeans != null)
     {
-      model.addAttribute("interval", ObserverProperties.getNetworkRefreshInterval() / 1000);
       model.addAttribute("infoBeans", infoBeans);
     }
     model.addAttribute("lastBlockWithSameGenSig", "Last Block height with same generation signature: " + lastBlockWithSameGenSig);

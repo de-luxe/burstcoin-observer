@@ -52,7 +52,6 @@ public class AssetController
 {
   private List<AssetInfo> assetInfos = new ArrayList<>();
 
-
   @EventListener
   public void handleMessage(AssetInfoUpdateEvent event)
   {
@@ -138,6 +137,14 @@ public class AssetController
       @Override
       public int compare(AssetInfo o1, AssetInfo o2)
       {
+        return Long.valueOf(o2.getVolume30Days()).compareTo(Long.valueOf(o1.getVolume30Days()));
+      }
+    });
+    Collections.sort(assetInfos, new Comparator<AssetInfo>()
+    {
+      @Override
+      public int compare(AssetInfo o1, AssetInfo o2)
+      {
         return Long.valueOf(o2.getVolume7Days()).compareTo(Long.valueOf(o1.getVolume7Days()));
       }
     });
@@ -154,8 +161,8 @@ public class AssetController
   public String pool(Model model)
   {
     addNavigationBean(NavigationPoint.ASSET, model);
-    // todo interval
-    model.addAttribute("refreshContent", "240; URL=" + ObserverProperties.getObserverUrl() + "/asset");
+    model.addAttribute("refreshContent", ObserverProperties.getAssetRefreshInterval() / 1000 + 1 + "; URL=" + ObserverProperties.getObserverUrl() + "/asset");
+    model.addAttribute("interval", ObserverProperties.getAssetRefreshInterval() / 1000);
     if(assetInfos != null)
     {
       model.addAttribute("assetInfos", assetInfos);

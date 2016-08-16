@@ -1,18 +1,19 @@
-# burstcoin-network-observer
-Simple webservice ... that refreshes every few seconds and shows the current miningInfo of given wallets/pools.
+# burstcoin-observer
+Burstcoin-Observer is a Web-Application and Server bundled in a single jar. 
+The Web-Application provides a overview on different aspects within the Burstcoin network, including pools and crowdfund.
 
-Features:
-- Checks all given pools/wallets for their current state 
-- Proivides pool Stats
+## Features:
+- Proivides Network, Pool, Asset and Crowdfund Overview
 - Easy to run with included standalone tomcat server.
-- API for JSON and JSONP
+- All Data available via API for JSON and JSONP
+- Allows using Proxy and  Google Analytics 
+- Fork detection (beta) - Send E-Mail on fork
+- Easy adjustable style/layout by edition HTML templates in *.jar
 
-Requirements:
+## Requirements:
 - java8
+- Burstcoin wallet
 
-Setup:
-- edit 'observer.properties' (e.g. rename observer.default.properties) 
-
-
-
-
+## Setup:
+- Edit 'observer.properties' (e.g. rename observer.default.properties) 
+- Run jar-File .. 

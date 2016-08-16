@@ -129,7 +129,7 @@ public class PoolService
         }
         onRewardAssignmentLookup(rewardAssignmentLookup);
       }
-    }, 2000, 1000 * 60 * 5 /* every 5 min. */);
+    }, 200, ObserverProperties.getPoolRefreshInterval());
   }
 
   private void onRewardAssignmentLookup(Map<String, Set<String>> assignmentLookup)
@@ -184,7 +184,7 @@ public class PoolService
     {
       if(SOLO_KEY.equals(poolAccountId))
       {
-        pools.add(new PoolInfo(poolAccountId, poolAccountId, "Solo-Miners", "", "N/A",
+        pools.add(new PoolInfo(poolAccountId, poolAccountId, "Solo-Miners", "", "0",
                                assignmentLookup.get(poolAccountId).size(),
                                countLookup.get(SOLO_KEY), assignmentLookup.get(poolAccountId).size(), formatAmountNQT(rewardLookup.get(SOLO_KEY))));
 

@@ -75,7 +75,7 @@ public class AssetService
         publisher.publishEvent(new AssetInfoUpdateEvent(state, assetLookup, orderLookup, tradeLookup));
 
       }
-    }, 2000, 1000 * 60 * 10 /* every 10 min. */);
+    }, 200, ObserverProperties.getAssetRefreshInterval());
   }
 
   private Map<String, Asset> createAssetLookup()
@@ -83,8 +83,7 @@ public class AssetService
     Map<String, Asset> assetLookup = null;
     try
     {
-      ContentResponse response = httpClient.POST(ObserverProperties.getWalletUrl() + "/burst")
-        .param("requestType", "getAllAssets")
+      ContentResponse response = httpClient.newRequest(ObserverProperties.getWalletUrl() + "/burst?requestType=getAllAssets")
         .timeout(ObserverProperties.getConnectionTimeout(), TimeUnit.MILLISECONDS)
         .send();
 
@@ -110,8 +109,8 @@ public class AssetService
     {
       InputStreamResponseListener listener = new InputStreamResponseListener();
 
-      Request request = httpClient.POST(ObserverProperties.getWalletUrl() + "/burst")
-        .param("requestType", "getAllTrades")
+      Request request = httpClient.newRequest(ObserverProperties.getWalletUrl() + "/burst?requestType=getAllTrades")
+//        .param("requestType", "getAllTrades")
         .timeout(ObserverProperties.getConnectionTimeout(), TimeUnit.MILLISECONDS);
       request.send(listener);
 
@@ -157,9 +156,9 @@ public class AssetService
     {
       InputStreamResponseListener listener = new InputStreamResponseListener();
 
-      Request request = httpClient.POST(ObserverProperties.getWalletUrl() + "/burst")
-        .param("requestType", "getState")
-        .param("includeCounts", "true")
+      Request request = httpClient.newRequest(ObserverProperties.getWalletUrl() + "/burst?requestType=getState&includeCounts=true")
+//        .param("requestType", "getState")
+//        .param("includeCounts", "true")
         .timeout(ObserverProperties.getConnectionTimeout(), TimeUnit.MILLISECONDS);
       request.send(listener);
 
@@ -194,7 +193,7 @@ public class AssetService
     Map<OrderType, Map<Asset, List<Order>>> orderLookup = new HashMap<>();
     try
     {
-      ContentResponse response = httpClient.POST(ObserverProperties.getWalletUrl() + "/burst")
+      ContentResponse response = httpClient.newRequest(ObserverProperties.getWalletUrl() + "/burst")
         .param("requestType", "getAllOpenAskOrders")
         .timeout(ObserverProperties.getConnectionTimeout(), TimeUnit.MILLISECONDS)
         .send();
@@ -204,7 +203,7 @@ public class AssetService
 
       addOrders(OrderType.ASK, orderLookup, askOrders, assetLookup);
 
-      response = httpClient.POST(ObserverProperties.getWalletUrl() + "/burst")
+      response = httpClient.newRequest(ObserverProperties.getWalletUrl() + "/burst")
         .param("requestType", "getAllOpenBidOrders")
         .timeout(ObserverProperties.getConnectionTimeout(), TimeUnit.MILLISECONDS)
         .send();

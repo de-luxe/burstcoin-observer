@@ -39,8 +39,7 @@
 
             <div class="jumbotron">
                 <h1 class="display-3">Burstcoin Crowdfund</h1>
-                <p class="lead">This page updates every <span th:text="${interval / 60}"></span> minutes. Send BURST to the 'Fund AccountID' to participate in a Crowdfund.</p>
-                <p class="lead">Powered by Automated Transactions (AT) - 'Turing complete Smart Contracts'.</p>
+                <p class="lead">This page updates every <span th:text="${interval / 60}"></span> minutes (Data updated <span th:text="${lastUpdate / 60}"></span> minutes ago). <br/>Send BURST to the 'Fund AccountID' to participate in a Crowdfund.<br/>Powered by Automated Transactions (AT) - 'Turing complete Smart Contracts'.</p>
                 <table class="table table-hover table-striped">
                     <thead>
                         <tr>
@@ -57,7 +56,10 @@
 
                         <div th:each="crowdfundBean,iterStat : ${crowdfundBeans}">
                             <tr>
-                                <td th:text="${crowdfundBean.atRS}"></td>
+                                <td>
+                                    <a th:href="'http://burstcoin.biz/address/' + ${crowdfundBean.at}" th:text="${crowdfundBean.atRS}"
+                                       th:title="'AccountID: '+ ${crowdfundBean.atRS}" target="_blank" class="btn-link" style="color: black;"></a>
+                                </td>
                                 <td th:text="${crowdfundBean.name}" th:title="${crowdfundBean.fullName}"></td>
                                 <td th:text="${crowdfundBean.state}"></td>
                                 <th scope="row" th:text="${#numbers.formatInteger(crowdfundBean.currentAmount,0,'DEFAULT')}"></th>
@@ -81,7 +83,7 @@
                         </div>
                     </tbody>
                 </table>
-
+                <p class="lead">NOTICE: This list is not complete ... scam, test and never funded Crowdfunds are filtered.</p>
             </div>
         </div>
 

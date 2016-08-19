@@ -23,8 +23,10 @@
 package burstcoin.observer.service;
 
 import burstcoin.observer.ObserverProperties;
-import burstcoin.observer.event.NetworkMiningInfoUpdateEvent;
-import burstcoin.observer.model.MiningInfo;
+import burstcoin.observer.event.NetworkUpdateEvent;
+import burstcoin.observer.service.model.MiningInfo;
+import burstcoin.observer.bean.NetworkBean;
+import burstcoin.observer.bean.NetworkState;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,11 +34,20 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -56,7 +67,15 @@ public class NetworkService
   @Autowired
   private ApplicationEventPublisher publisher;
 
+  @Autowired
+  private JavaMailSender mailSender;
+
   private Timer timer = new Timer();
+  // blockHeight -> genSig -> domains
+  private Map<Long, Map<String, Set<String>>> genSigLookup = new HashMap<>();
+  private Long lastBlockWithSameGenSig;
+  private boolean forkMailSend = false;
+  private Long lastBlockWithSameGenSigMailSend = 0L;
 
   @PostConstruct
   private void postConstruct()
@@ -72,22 +91,150 @@ public class NetworkService
       @Override
       public void run()
       {
-        Map<String, MiningInfo> miningInfoLookup = new HashMap<>();
-
-        // update compare wallets data
-        for(String networkServerUrls : ObserverProperties.getNetworkServerUrls())
+        try
         {
-          MiningInfo miningInfo = getMiningInfo(networkServerUrls);
-          if(miningInfo != null)
+          Map<String, MiningInfo> miningInfoLookup = new HashMap<>();
+
+          // update compare wallets data
+          for(String networkServerUrls : ObserverProperties.getNetworkServerUrls())
           {
-            miningInfoLookup.put(networkServerUrls, miningInfo);
+            MiningInfo miningInfo = getMiningInfo(networkServerUrls);
+            if(miningInfo != null)
+            {
+              miningInfoLookup.put(networkServerUrls, miningInfo);
+            }
+            else
+            {
+              miningInfoLookup.put(networkServerUrls, null);
+            }
           }
-          else
+
+          List<NetworkBean> networkBeans = new ArrayList<>();
+          for(Map.Entry<String, MiningInfo> entry : miningInfoLookup.entrySet())
           {
-            miningInfoLookup.put(networkServerUrls, null);
+            MiningInfo miningInfo = entry.getValue();
+
+            String domain = entry.getKey().replace("http://", "").replace("https://", "");
+            if(miningInfo != null && miningInfo.getGenerationSignature() != null)
+            {
+              networkBeans.add(new NetworkBean(String.valueOf(miningInfo.getHeight()), domain, entry.getKey(), miningInfo.getBaseTarget(),
+                                               miningInfo.getGenerationSignature().substring(0, 25) + "...",
+                                               String.valueOf(miningInfo.getTargetDeadline())));
+            }
+            else
+            {
+              networkBeans.add(new NetworkBean(domain));
+            }
           }
+          Collections.sort(networkBeans, new Comparator<NetworkBean>()
+          {
+            @Override
+            public int compare(NetworkBean o1, NetworkBean o2)
+            {
+              return o1.getBaseTarget().compareTo(o2.getBaseTarget());
+            }
+          });
+          Collections.sort(networkBeans, new Comparator<NetworkBean>()
+          {
+            @Override
+            public int compare(NetworkBean o1, NetworkBean o2)
+            {
+              return o2.getHeight().compareTo(o1.getHeight());
+            }
+          });
+
+          // update genSig Lookup
+          int numberOfNotAvailableDomains = 0;
+          for(NetworkBean networkBean : networkBeans)
+          {
+            if(networkBean.getAvailable())
+            {
+              Long height = Long.valueOf(networkBean.getHeight());
+              if(!genSigLookup.containsKey(height))
+              {
+                genSigLookup.put(height, new HashMap<>());
+              }
+              Map<String, Set<String>> subMap = genSigLookup.get(height);
+              if(!subMap.containsKey(networkBean.getGenerationSignature()))
+              {
+                subMap.put(networkBean.getGenerationSignature(), new HashSet<>());
+              }
+              Set<String> domains = subMap.get(networkBean.getGenerationSignature());
+              domains.add(networkBean.getDomain());
+            }
+            else
+            {
+              // N/A
+              numberOfNotAvailableDomains++;
+            }
+          }
+
+          List<Long> order = new ArrayList<>(genSigLookup.keySet());
+          Collections.sort(order);
+          Collections.reverse(order);
+
+          Iterator<Long> iterator = order.iterator();
+          lastBlockWithSameGenSig = null;
+          while(iterator.hasNext() && lastBlockWithSameGenSig == null)
+          {
+            Long nextHeight = iterator.next();
+            if(genSigLookup.get(nextHeight).size() == 1) // only one known genSig for height
+            {
+              // number of domains with same genSig = all domains without N/A
+              if(networkBeans.size() - numberOfNotAvailableDomains == genSigLookup.get(nextHeight).values().iterator().next().size())
+              {
+                lastBlockWithSameGenSig = nextHeight;
+              }
+            }
+          }
+
+          boolean appStartedAfterForkHappened = lastBlockWithSameGenSig == null;
+
+          boolean sendMail = false;
+          for(NetworkBean networkBean : networkBeans)
+          {
+            if(networkBean.getAvailable())
+            {
+              Long height = Long.valueOf(networkBean.getHeight());
+              Set<String> domainsWithSameGenSigForBlock = genSigLookup.get(height).get(networkBean.getGenerationSignature());
+              if(genSigLookup.get(height).size() > 1 && domainsWithSameGenSigForBlock.size() < (networkBeans.size() - numberOfNotAvailableDomains) / 2)
+              {
+                networkBean.setState(NetworkState.FORKED);
+                sendMail = true;
+              }
+            }
+          }
+
+          if(sendMail && !forkMailSend)
+          {
+            if(ObserverProperties.isEnableForkNotify()
+               && (appStartedAfterForkHappened || (lastBlockWithSameGenSigMailSend != null && !lastBlockWithSameGenSig
+              .equals(lastBlockWithSameGenSigMailSend))))
+            {
+              forkMailSend = true;
+              // ensure only one mail send per lastBlockWithSameGenSig e.g. if forked wallet pops off blocks over and over again
+              lastBlockWithSameGenSigMailSend = lastBlockWithSameGenSig;
+
+              SimpleMailMessage mailMessage = new SimpleMailMessage();
+              mailMessage.setTo(ObserverProperties.getMailReceiver());
+              mailMessage.setReplyTo("do-not-reply@burst-team.us");
+              mailMessage.setFrom("do-not-reply@burst-team.us");
+              mailMessage.setSubject("Burstcoin-Observer - Fork after block: " + lastBlockWithSameGenSig);
+              mailMessage.setText("Please check: " + ObserverProperties.getObserverUrl());
+              mailSender.send(mailMessage);
+            }
+          }
+          else if(!sendMail && !appStartedAfterForkHappened)
+          {
+            forkMailSend = false;
+          }
+
+          publisher.publishEvent(new NetworkUpdateEvent(networkBeans, lastBlockWithSameGenSig));
         }
-        publisher.publishEvent(new NetworkMiningInfoUpdateEvent(miningInfoLookup));
+        catch(Exception e)
+        {
+          LOG.error("Failed receiving Network data.");
+        }
       }
     }, 200, ObserverProperties.getNetworkRefreshInterval());
   }
@@ -132,7 +279,7 @@ public class NetworkService
       }
       catch(Exception e)
       {
-        LOG.warn("Unable to get mining info from wallet for '"+server+"': " + e.getMessage());
+        LOG.warn("Unable to get mining info from wallet for '" + server + "': " + e.getMessage());
       }
     }
 

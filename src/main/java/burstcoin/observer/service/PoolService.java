@@ -2,14 +2,14 @@ package burstcoin.observer.service;
 
 
 import burstcoin.observer.ObserverProperties;
-import burstcoin.observer.event.PoolInfoUpdateEvent;
-import burstcoin.observer.model.Account;
-import burstcoin.observer.model.AccountIds;
-import burstcoin.observer.model.Block;
-import burstcoin.observer.model.BlockchainStatus;
-import burstcoin.observer.model.Blocks;
-import burstcoin.observer.model.PoolInfo;
-import burstcoin.observer.model.RewardRecipient;
+import burstcoin.observer.event.PoolUpdateEvent;
+import burstcoin.observer.service.model.Account;
+import burstcoin.observer.service.model.AccountIds;
+import burstcoin.observer.service.model.Block;
+import burstcoin.observer.service.model.BlockchainStatus;
+import burstcoin.observer.service.model.Blocks;
+import burstcoin.observer.service.model.RewardRecipient;
+import burstcoin.observer.bean.PoolBean;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,6 +39,7 @@ public class PoolService
 {
   private static Log LOG = LogFactory.getLog(PoolService.class);
   private static final String SOLO_KEY = "Solo-Miners";
+
   @Autowired
   private ObjectMapper objectMapper;
 
@@ -65,74 +66,82 @@ public class PoolService
       @Override
       public void run()
       {
-        blocks = getBlocks(10 /*last 10 days*/);
-
-        final Map<String, Integer> countLookup = new HashMap<>();
-        Map<String, Long> rewardLookup = new HashMap<>();
-
-        for(Block block : PoolService.this.blocks)
+        try
         {
-          String generatorRS = block.getGeneratorRS();
-          Long reward = Long.valueOf(block.getBlockReward());
-          Long fee = Long.valueOf(block.getTotalFeeNQT());
+          blocks = getBlocks(10 /*last 10 days*/);
 
-          if(!countLookup.containsKey(generatorRS))
+          final Map<String, Integer> countLookup = new HashMap<>();
+          Map<String, Long> rewardLookup = new HashMap<>();
+
+          for(Block block : PoolService.this.blocks)
           {
-            countLookup.put(generatorRS, 1);
-            rewardLookup.put(generatorRS, reward + fee);
-          }
-          else
-          {
-            Integer count = countLookup.get(generatorRS) + 1;
-            countLookup.put(generatorRS, count);
+            String generatorRS = block.getGeneratorRS();
+            Long reward = Long.valueOf(block.getBlockReward());
+            Long fee = Long.valueOf(block.getTotalFeeNQT());
 
-            Long rewards = rewardLookup.get(generatorRS) + reward + fee;
-            rewardLookup.put(generatorRS, rewards);
-          }
-        }
-
-        Map<String, Set<String>> rewardAssignmentLookup = new HashMap<>();
-
-        rewardAssignmentLookup.put(SOLO_KEY, new HashSet<>());
-
-        for(Block block : blocks)
-        {
-
-          if(block != null)
-          {
-            final String numericGeneratorAccountId = block.getGenerator();
-
-            // check if numericGeneratorAccountId is known already
-            boolean generatorKnown = false;
-            Iterator<Map.Entry<String, Set<String>>> iterator = rewardAssignmentLookup.entrySet().iterator();
-            while(!generatorKnown && iterator.hasNext())
+            if(!countLookup.containsKey(generatorRS))
             {
-              generatorKnown = iterator.next().getValue().contains(numericGeneratorAccountId);
+              countLookup.put(generatorRS, 1);
+              rewardLookup.put(generatorRS, reward + fee);
             }
-
-            if(!generatorKnown)
+            else
             {
-              RewardRecipient rewardRecipient = getRewardRecipient(numericGeneratorAccountId);
-              final String rewardRecipientAccounId = rewardRecipient.getRewardRecipient();
-              if(numericGeneratorAccountId.equals(rewardRecipientAccounId))
-              {
-                // solo
-                rewardAssignmentLookup.get(SOLO_KEY).add(rewardRecipientAccounId);
-              }
-              else
-              {
-                // pool - get all reward Assignments of new found pool;
-                rewardAssignmentLookup.put(rewardRecipientAccounId, getAccountsWithRewardRecipient(rewardRecipientAccounId));
-              }
+              Integer count = countLookup.get(generatorRS) + 1;
+              countLookup.put(generatorRS, count);
+
+              Long rewards = rewardLookup.get(generatorRS) + reward + fee;
+              rewardLookup.put(generatorRS, rewards);
             }
           }
+
+          Map<String, Set<String>> rewardAssignmentLookup = new HashMap<>();
+
+          rewardAssignmentLookup.put(SOLO_KEY, new HashSet<>());
+
+          for(Block block : blocks)
+          {
+            if(block != null)
+            {
+              final String numericGeneratorAccountId = block.getGenerator();
+
+              // check if numericGeneratorAccountId is known already
+              boolean generatorKnown = false;
+              Iterator<Map.Entry<String, Set<String>>> iterator = rewardAssignmentLookup.entrySet().iterator();
+              while(!generatorKnown && iterator.hasNext())
+              {
+                generatorKnown = iterator.next().getValue().contains(numericGeneratorAccountId);
+              }
+
+              if(!generatorKnown)
+              {
+                RewardRecipient rewardRecipient = getRewardRecipient(numericGeneratorAccountId);
+                final String rewardRecipientAccounId = rewardRecipient.getRewardRecipient();
+                if(numericGeneratorAccountId.equals(rewardRecipientAccounId))
+                {
+                  // solo
+                  rewardAssignmentLookup.get(SOLO_KEY).add(rewardRecipientAccounId);
+                }
+                else
+                {
+                  // pool - get all reward Assignments of new found pool;
+                  rewardAssignmentLookup.put(rewardRecipientAccounId, getAccountsWithRewardRecipient(rewardRecipientAccounId));
+                }
+              }
+            }
+          }
+          List<PoolBean> poolBeans = onRewardAssignmentLookup(rewardAssignmentLookup);
+
+          publisher.publishEvent(new PoolUpdateEvent(poolBeans));
         }
-        onRewardAssignmentLookup(rewardAssignmentLookup);
+        catch(Exception e)
+        {
+          LOG.error("Failed updating Pool data.");
+        }
       }
     }, 200, ObserverProperties.getPoolRefreshInterval());
   }
 
-  private void onRewardAssignmentLookup(Map<String, Set<String>> assignmentLookup)
+  private List<PoolBean> onRewardAssignmentLookup(Map<String, Set<String>> assignmentLookup)
   {
     // generatorRs -> foundBlocks
     Map<String, Integer> countLookup = new HashMap<>();
@@ -177,14 +186,14 @@ public class PoolService
       }
     }
 
-    List<PoolInfo> pools = new ArrayList<>();
+    List<PoolBean> pools = new ArrayList<>();
 
     // create models
     for(String poolAccountId : assignmentLookup.keySet())
     {
       if(SOLO_KEY.equals(poolAccountId))
       {
-        pools.add(new PoolInfo(poolAccountId, poolAccountId, "Solo-Miners", "", "0",
+        pools.add(new PoolBean(poolAccountId, poolAccountId, "Solo-Miners", "", "0",
                                assignmentLookup.get(poolAccountId).size(),
                                countLookup.get(SOLO_KEY), assignmentLookup.get(poolAccountId).size(), formatAmountNQT(rewardLookup.get(SOLO_KEY))));
 
@@ -205,23 +214,23 @@ public class PoolService
             earnedReward += rewardLookup.get(poolMinerAccountId);
           }
         }
-        pools.add(new PoolInfo(poolAccountId, account.getAccountRS(), account.getName(), account.getDescription(),
+        pools.add(new PoolBean(poolAccountId, account.getAccountRS(), account.getName(), account.getDescription(),
                                formatAmountNQT(Long.valueOf(account.getBalanceNQT())),
                                assignmentLookup.get(poolAccountId).size(),
                                minedBlocks, numberOfPoolBlockFinder, formatAmountNQT(earnedReward)));
       }
     }
 
-    Collections.sort(pools, new Comparator<PoolInfo>()
+    Collections.sort(pools, new Comparator<PoolBean>()
     {
       @Override
-      public int compare(PoolInfo o1, PoolInfo o2)
+      public int compare(PoolBean o1, PoolBean o2)
       {
-        return Integer.compare( o2.getFoundBlocks(), o1.getFoundBlocks());
+        return Integer.compare(o2.getFoundBlocks(), o1.getFoundBlocks());
       }
     });
 
-    publisher.publishEvent(new PoolInfoUpdateEvent(pools));
+    return pools;
   }
 
   private String formatAmountNQT(Long amount)

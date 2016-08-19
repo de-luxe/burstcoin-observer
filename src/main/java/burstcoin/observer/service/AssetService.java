@@ -2,15 +2,16 @@ package burstcoin.observer.service;
 
 
 import burstcoin.observer.ObserverProperties;
-import burstcoin.observer.event.AssetInfoUpdateEvent;
-import burstcoin.observer.model.State;
-import burstcoin.observer.model.asset.Asset;
-import burstcoin.observer.model.asset.Assets;
-import burstcoin.observer.model.asset.Order;
-import burstcoin.observer.model.asset.OrderType;
-import burstcoin.observer.model.asset.Orders;
-import burstcoin.observer.model.asset.Trade;
-import burstcoin.observer.model.asset.Trades;
+import burstcoin.observer.bean.AssetBean;
+import burstcoin.observer.event.AssetUpdateEvent;
+import burstcoin.observer.service.model.State;
+import burstcoin.observer.service.model.asset.Asset;
+import burstcoin.observer.service.model.asset.Assets;
+import burstcoin.observer.service.model.asset.Order;
+import burstcoin.observer.service.model.asset.OrderType;
+import burstcoin.observer.service.model.asset.Orders;
+import burstcoin.observer.service.model.asset.Trade;
+import burstcoin.observer.service.model.asset.Trades;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,7 +27,10 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -63,24 +67,124 @@ public class AssetService
       @Override
       public void run()
       {
-        LOG.info("START import asset data from " + ObserverProperties.getWalletUrl());
-        Map<String, Asset> assetLookup = createAssetLookup();
-        Map<OrderType, Map<Asset, List<Order>>> orderLookup = createOrderLookup(assetLookup);
-        Map<Asset, List<Trade>> tradeLookup = createTradeLookup(assetLookup);
+        try
+        {
+          LOG.info("START import asset data from " + ObserverProperties.getWalletUrl());
+          Map<String, Asset> assetLookup = createAssetLookup();
+          Map<OrderType, Map<Asset, List<Order>>> orderLookup = createOrderLookup(assetLookup);
+          Map<Asset, List<Trade>> tradeLookup = createTradeLookup(assetLookup);
 
-        State state = getState();
-        LOG.info("FINISH import asset data!");
+          State state = getState();
+          LOG.info("FINISH import asset data!");
 
+          List<AssetBean> assetBeans = new ArrayList<>();
+          for(Asset asset : assetLookup.values())
+          {
+            long volume7Days = 0L;
+            long volume30Days = 0L;
+            Long lastPrice = null;
 
-        publisher.publishEvent(new AssetInfoUpdateEvent(state, assetLookup, orderLookup, tradeLookup));
+            List<Trade> trades = tradeLookup.get(asset);
+            if(trades != null && !trades.isEmpty())
+            {
+              Iterator<Trade> iterator = trades.iterator();
+              boolean withinLast30Days = true;
 
+              while(withinLast30Days && iterator.hasNext())
+              {
+                Trade trade = iterator.next();
+//          if(lastPrice == null)
+//          {
+//            lastPrice = Long.valueOf(trade.getPriceNQT());
+//
+//            System.out.println("---------------------------------");
+//            System.out.println("trade price: " + trade.getPriceNQT());
+//            System.out.println("trade amount: " + trade.getQuantityQNT());
+//            System.out.println("asset decimals: " + asset.getDecimals());
+//            int sub = trade.getPriceNQT().length() - asset.getDecimals();
+////            if(asset.getDecimals() > 0)
+////            {
+////              sub = trade.getPriceNQT().length() - asset.getDecimals();
+////            }
+//            if(trade.getPriceNQT().length() > sub)
+//            {
+//              System.out.println("price1: " + trade.getPriceNQT().substring(0, sub));
+//            }
+//            else
+//            {
+//              System.out.println("price1: " + "> 1");
+//            }
+////            System.out.println("price1: " + trade.getPriceNQT().substring(0, trade.getPriceNQT().length() - asset.getDecimals()));
+//          }
+
+                Integer bidOrderBlock = Integer.valueOf(trade.getBidOrderHeight());
+                Integer askOrderBlock = Integer.valueOf(trade.getAskOrderHeight());
+                int block = bidOrderBlock >= askOrderBlock ? bidOrderBlock : askOrderBlock;
+                withinLast30Days = state.getNumberOfBlocks() - 360 * 30 < block;
+
+                if(withinLast30Days)
+                {
+
+                  long volume = Long.valueOf(trade.getPriceNQT()) * Long.valueOf(trade.getQuantityQNT());
+                  volume30Days += volume;
+
+                  if(state.getNumberOfBlocks() - 360 * 7 < block)
+                  {
+                    volume7Days += volume;
+                  }
+                }
+              }
+            }
+
+            List<Order> sellOrders = orderLookup.get(OrderType.ASK).get(asset) != null ? orderLookup.get(OrderType.ASK).get(asset) : new ArrayList<>();
+            List<Order> buyOrders = orderLookup.get(OrderType.BID).get(asset) != null ? orderLookup.get(OrderType.BID).get(asset) : new ArrayList<>();
+
+            if(!(buyOrders.isEmpty() && sellOrders.isEmpty() && asset.getNumberOfTrades() < 2))
+            {
+              assetBeans.add(new AssetBean(asset.getAsset(), asset.getName(), asset.getDescription(), asset.getAccountRS(), asset.getAccount(),
+                                           asset.getQuantityQNT(), asset.getDecimals(), asset.getNumberOfAccounts(), asset.getNumberOfTransfers(),
+                                           asset.getNumberOfTrades(), buyOrders.size(), sellOrders.size(),
+                                           formatAmountNQT(volume7Days, 8), formatAmountNQT(volume30Days, 8),
+                                           "N/A")); // lastPrice != null ? formatAmountNQT(lastPrice, asset.getDecimals() > 0 ? asset.getDecimals() : 8) : "N/A")
+            }
+          }
+          Collections.sort(assetBeans, new Comparator<AssetBean>()
+          {
+            @Override
+            public int compare(AssetBean o1, AssetBean o2)
+            {
+              return Long.valueOf(o2.getVolume30Days()).compareTo(Long.valueOf(o1.getVolume30Days()));
+            }
+          });
+          Collections.sort(assetBeans, new Comparator<AssetBean>()
+          {
+            @Override
+            public int compare(AssetBean o1, AssetBean o2)
+            {
+              return Long.valueOf(o2.getVolume7Days()).compareTo(Long.valueOf(o1.getVolume7Days()));
+            }
+          });
+
+          publisher.publishEvent(new AssetUpdateEvent(assetBeans));
+        }
+        catch(Exception e)
+        {
+          LOG.error("Failed update assets!");
+        }
       }
     }, 200, ObserverProperties.getAssetRefreshInterval());
   }
 
+  private String formatAmountNQT(Long amount, int decimals)
+  {
+    String amountStr = String.valueOf(amount);
+//    return amountStr;
+    return amount != null && amountStr.length() >= decimals ? amountStr.substring(0, amountStr.length() - decimals) : "" + amount;
+  }
+
   private Map<String, Asset> createAssetLookup()
   {
-    Map<String, Asset> assetLookup = null;
+    Map<String, Asset> assetLookup = new HashMap<>();
     try
     {
       ContentResponse response = httpClient.newRequest(ObserverProperties.getWalletUrl() + "/burst?requestType=getAllAssets")
@@ -170,7 +274,7 @@ public class AssetService
         // Use try-with-resources to close input stream.
         try (InputStream responseContent = listener.getInputStream())
         {
-            state = objectMapper.readValue(responseContent, State.class);
+          state = objectMapper.readValue(responseContent, State.class);
 
 
 //          LOG.info("received '" + trades.getTrades().size() + "' trades in '" + trades.getRequestProcessingTime() + "' ms");

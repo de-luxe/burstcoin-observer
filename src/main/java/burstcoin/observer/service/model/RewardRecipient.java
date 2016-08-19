@@ -20,34 +20,15 @@
  *
  */
 
-package burstcoin.observer.controller;
+package burstcoin.observer.service.model;
 
-
-import burstcoin.observer.ObserverProperties;
-import burstcoin.observer.bean.NavigationBean;
-import burstcoin.observer.bean.NavigationPoint;
-import org.springframework.ui.Model;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-public class BaseController
+public class RewardRecipient
+  extends IsResponse
 {
-  protected void addNavigationBean(NavigationPoint active, Model model)
+  protected String rewardRecipient;
+
+  public String getRewardRecipient()
   {
-    List<NavigationPoint> left = new ArrayList<>();
-    left.add(NavigationPoint.NETWORK);
-    left.add(NavigationPoint.POOL);
-    left.add(NavigationPoint.ASSET);
-    left.add(NavigationPoint.CROWDFUND);
-
-    List<NavigationPoint> right = new ArrayList<>();
-    right.add(NavigationPoint.API);
-    right.add(NavigationPoint.GITHUB);
-    Collections.reverse(right);
-
-    model.addAttribute("analyticsCode", ObserverProperties.getAnalyticsCode());
-    model.addAttribute("navigation", new NavigationBean(left, right, active));
+    return rewardRecipient;
   }
 }

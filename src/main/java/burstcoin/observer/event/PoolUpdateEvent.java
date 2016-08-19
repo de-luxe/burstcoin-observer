@@ -20,34 +20,33 @@
  *
  */
 
-package burstcoin.observer.controller;
+package burstcoin.observer.event;
 
 
-import burstcoin.observer.ObserverProperties;
-import burstcoin.observer.bean.NavigationBean;
-import burstcoin.observer.bean.NavigationPoint;
-import org.springframework.ui.Model;
+import burstcoin.observer.bean.PoolBean;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
-public class BaseController
+public class PoolUpdateEvent
 {
-  protected void addNavigationBean(NavigationPoint active, Model model)
+  private List<PoolBean> poolBeans;
+  private Date lastUpdate;
+
+  public PoolUpdateEvent(List<PoolBean> poolBeans)
   {
-    List<NavigationPoint> left = new ArrayList<>();
-    left.add(NavigationPoint.NETWORK);
-    left.add(NavigationPoint.POOL);
-    left.add(NavigationPoint.ASSET);
-    left.add(NavigationPoint.CROWDFUND);
+    lastUpdate = new Date();
 
-    List<NavigationPoint> right = new ArrayList<>();
-    right.add(NavigationPoint.API);
-    right.add(NavigationPoint.GITHUB);
-    Collections.reverse(right);
+    this.poolBeans = poolBeans;
+  }
 
-    model.addAttribute("analyticsCode", ObserverProperties.getAnalyticsCode());
-    model.addAttribute("navigation", new NavigationBean(left, right, active));
+  public List<PoolBean> getPoolBeans()
+  {
+    return poolBeans;
+  }
+
+  public Date getLastUpdate()
+  {
+    return lastUpdate;
   }
 }

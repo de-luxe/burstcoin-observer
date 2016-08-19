@@ -24,12 +24,14 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
     <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
         <title>Burstcoin Network</title>
 
         <meta http-equiv="refresh" th:content="${refreshContent}"/>
         <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/style.css}"/>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     </head>
 
     <body>
@@ -42,10 +44,9 @@
                 <h1 class="display-3">Burstcoin Network</h1>
 
                 <p class="lead">
-                    This page updates every <span th:text="${interval}"></span> seconds and should provide a quick overview of Burstcoin network.
+                    This page updates every <span th:text="${interval}"></span> seconds and should provide a quick overview of Burstcoin network.<br/>
+                    <b><span th:text="${lastBlockWithSameGenSig}"></span></b> (Data updated <span th:text="${lastUpdate}"></span> seconds ago.)
                 </p>
-
-                <p class="lead" th:text="${lastBlockWithSameGenSig}"></p>
 
                 <table class="table table-hover table-striped">
                     <thead>
@@ -56,18 +57,20 @@
                             <th>Domain</th>
                             <th>GenerationSignature</th>
                             <th>TargetDeadline</th>
-                            <th>Forked</th>
+                            <th>State</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="infoBean,iterStat : ${infoBeans}">
-                            <th scope="row" th:text="${infoBean.height}"></th>
-                            <td th:text="${infoBean.baseTarget}"></td>
-                            <td th:text="${infoBean.type}"></td>
-                            <td th:text="${infoBean.domain}"></td>
-                            <td th:text="${infoBean.generationSignature}"></td>
-                            <td th:text="${infoBean.targetDeadline}"></td>
-                            <td th:text="${infoBean.fork}"></td>
+                        <tr th:each="networkBean,iterStat : ${networkBeans}">
+                            <th scope="row" th:text="${networkBean.height}"></th>
+                            <td th:text="${networkBean.baseTarget}"></td>
+                            <td th:text="${networkBean.type}"></td>
+                            <td >
+                                <a data-toggle="tooltip" data-placement="right" th:href="${networkBean.url}" th:text="${networkBean.domain}" th:title="${networkBean.url}" target="_blank" class="btn-link" style="color: black;"></a>
+                            </td>
+                            <td th:text="${networkBean.generationSignature}"></td>
+                            <td th:text="${networkBean.targetDeadline}"></td>
+                            <td th:text="${networkBean.state}"></td>
                         </tr>
 
                     </tbody>
@@ -77,6 +80,5 @@
                 </p>
             </div>
         </div>
-
     </body>
 </html>

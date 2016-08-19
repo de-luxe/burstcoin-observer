@@ -20,34 +20,35 @@
  *
  */
 
-package burstcoin.observer.controller;
+package burstcoin.observer.bean;
 
-
-import burstcoin.observer.ObserverProperties;
-import burstcoin.observer.bean.NavigationBean;
-import burstcoin.observer.bean.NavigationPoint;
-import org.springframework.ui.Model;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-public class BaseController
+public enum NavigationPoint
 {
-  protected void addNavigationBean(NavigationPoint active, Model model)
+  NETWORK("Network", "/network"),
+  POOL("Pool", "/pool"),
+  ASSET("Asset", "/asset"),
+  CROWDFUND("Crowdfund", "/crowdfund"),
+
+  API("API", "/api"),
+  GITHUB("Github", "https://github.com/de-luxe/burstcoin-network-observer/releases");
+
+  private String href;
+  private String name;
+
+  NavigationPoint(String name, String href)
   {
-    List<NavigationPoint> left = new ArrayList<>();
-    left.add(NavigationPoint.NETWORK);
-    left.add(NavigationPoint.POOL);
-    left.add(NavigationPoint.ASSET);
-    left.add(NavigationPoint.CROWDFUND);
 
-    List<NavigationPoint> right = new ArrayList<>();
-    right.add(NavigationPoint.API);
-    right.add(NavigationPoint.GITHUB);
-    Collections.reverse(right);
+    this.href = href;
+    this.name = name;
+  }
 
-    model.addAttribute("analyticsCode", ObserverProperties.getAnalyticsCode());
-    model.addAttribute("navigation", new NavigationBean(left, right, active));
+  public String getHref()
+  {
+    return href;
+  }
+
+  public String getName()
+  {
+    return name;
   }
 }

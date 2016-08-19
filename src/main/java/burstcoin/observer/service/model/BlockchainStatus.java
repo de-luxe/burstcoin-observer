@@ -20,34 +20,70 @@
  *
  */
 
-package burstcoin.observer.controller;
+package burstcoin.observer.service.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import burstcoin.observer.ObserverProperties;
-import burstcoin.observer.bean.NavigationBean;
-import burstcoin.observer.bean.NavigationPoint;
-import org.springframework.ui.Model;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-public class BaseController
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class BlockchainStatus
+  extends IsResponse
 {
-  protected void addNavigationBean(NavigationPoint active, Model model)
+  private String lastBlock;
+  private String application;
+  private Boolean isScanning;
+  private String cumulativeDifficulty;
+  private long lastBlockchainFeederHeight;
+  private int numberOfBlocks;
+  private long time;
+  private String version;
+  private String blockchainFeeder;
+
+  public BlockchainStatus()
   {
-    List<NavigationPoint> left = new ArrayList<>();
-    left.add(NavigationPoint.NETWORK);
-    left.add(NavigationPoint.POOL);
-    left.add(NavigationPoint.ASSET);
-    left.add(NavigationPoint.CROWDFUND);
+  }
 
-    List<NavigationPoint> right = new ArrayList<>();
-    right.add(NavigationPoint.API);
-    right.add(NavigationPoint.GITHUB);
-    Collections.reverse(right);
+  public String getLastBlock()
+  {
+    return lastBlock;
+  }
 
-    model.addAttribute("analyticsCode", ObserverProperties.getAnalyticsCode());
-    model.addAttribute("navigation", new NavigationBean(left, right, active));
+  public String getApplication()
+  {
+    return application;
+  }
+
+  public Boolean getIsScanning()
+  {
+    return isScanning;
+  }
+
+  public String getCumulativeDifficulty()
+  {
+    return cumulativeDifficulty;
+  }
+
+  public long getLastBlockchainFeederHeight()
+  {
+    return lastBlockchainFeederHeight;
+  }
+
+  public int getNumberOfBlocks()
+  {
+    return numberOfBlocks;
+  }
+
+  public long getTime()
+  {
+    return time;
+  }
+
+  public String getVersion()
+  {
+    return version;
+  }
+
+  public String getBlockchainFeeder()
+  {
+    return blockchainFeeder;
   }
 }

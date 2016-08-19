@@ -40,11 +40,11 @@
             <div class="jumbotron">
                 <h1 class="display-3">Burstcoin Assets</h1>
 
-                <p class="lead">This page updates every <span th:text="${interval / 60}"></span> minutes and shows the Burstcoin Assets.</p>
+                <p class="lead">This page updates every <span th:text="${interval / 60}"></span> minutes (Data updated <span th:text="${lastUpdate / 60}"></span> minutes ago.) and shows the Burstcoin Assets.</p>
                 <table class="table table-hover table-striped">
                     <thead>
                         <tr>
-                            <th>Numeric AccountID</th>
+                            <th>Issuance TransactionID</th>
                             <th>Name</th>
                             <th>Holders</th>
                             <th>Asks</th>
@@ -56,20 +56,32 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <div th:each="assetInfo,iterStat : ${assetInfos}">
+                        <div th:each="assetBean,iterStat : ${assetBeans}">
                             <tr>
-                                <td th:text="${assetInfo.asset}"></td>
-                                <td th:text="${assetInfo.name}"></td>
-                                <td th:text="${assetInfo.numberOfAccounts}"></td>
-                                <td th:text="${assetInfo.numberOfSellOrders}"></td>
-                                <td th:text="${assetInfo.numberOfBuyOrders}"></td>
-                                <td th:text="${assetInfo.numberOfTrades}"></td>
+                                <td>
+                                    <span>
+                                        <a th:href="'http://burstcoin.biz/transaction/' + ${assetBean.asset}" th:text="${assetBean.asset}"
+                                           th:title="'TransactionID: '+${assetBean.asset}" target="_blank" class="btn-link" style="color: black;"></a> -
+                                        <a th:href="'https://wallet.burst-team.us/index.html#asset:' + ${assetBean.asset}"
+                                           title="Open in Asset-Exchange, using Online-Wallet." target="_blank" class="btn-link" style="color: black;">O</a> /
+                                        <a th:href="'http://localhost:8125/index.html#asset:' + ${assetBean.asset}"
+                                           title="Open in Asset-Exchange, using Local-Wallet." target="_blank" class="btn-link" style="color: black;">L</a>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a th:href="'http://burstcoin.biz/address/' + ${assetBean.account}" th:text="${assetBean.name}"
+                                       th:title="'Issuer AccountID: '+${assetBean.accountRS}" target="_blank" class="btn-link" style="color: black;"></a>
+                                </td>
+                                <td th:text="${assetBean.numberOfAccounts}"></td>
+                                <td th:text="${assetBean.numberOfSellOrders}"></td>
+                                <td th:text="${assetBean.numberOfBuyOrders}"></td>
+                                <td th:text="${assetBean.numberOfTrades}"></td>
                                 <!--<td th:text="${assetInfo.lastPrice}"></td>-->
-                                <th scope="row" th:text="${#numbers.formatInteger(assetInfo.volume7Days,0,'DEFAULT')}"></th>
-                                <td th:text="${#numbers.formatInteger(assetInfo.volume30Days,0,'DEFAULT')}"></td>
+                                <th scope="row" th:text="${#numbers.formatInteger(assetBean.volume7Days,0,'DEFAULT')}"></th>
+                                <td th:text="${#numbers.formatInteger(assetBean.volume30Days,0,'DEFAULT')}"></td>
                             </tr>
                             <tr>
-                                <td th:text="${assetInfo.description}" colspan="8"></td>
+                                <td th:text="${assetBean.description}" colspan="8"></td>
                             </tr>
                         </div>
                     </tbody>

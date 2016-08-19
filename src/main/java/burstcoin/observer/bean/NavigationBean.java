@@ -20,34 +20,36 @@
  *
  */
 
-package burstcoin.observer.controller;
+package burstcoin.observer.bean;
 
-
-import burstcoin.observer.ObserverProperties;
-import burstcoin.observer.bean.NavigationBean;
-import burstcoin.observer.bean.NavigationPoint;
-import org.springframework.ui.Model;
-
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-public class BaseController
+public class NavigationBean
 {
-  protected void addNavigationBean(NavigationPoint active, Model model)
+  private List<NavigationPoint> left;
+  private List<NavigationPoint> right;
+
+  private NavigationPoint active;
+
+  public NavigationBean(List<NavigationPoint> left, List<NavigationPoint> right, NavigationPoint active)
   {
-    List<NavigationPoint> left = new ArrayList<>();
-    left.add(NavigationPoint.NETWORK);
-    left.add(NavigationPoint.POOL);
-    left.add(NavigationPoint.ASSET);
-    left.add(NavigationPoint.CROWDFUND);
+    this.left = left;
+    this.right = right;
+    this.active = active;
+  }
 
-    List<NavigationPoint> right = new ArrayList<>();
-    right.add(NavigationPoint.API);
-    right.add(NavigationPoint.GITHUB);
-    Collections.reverse(right);
+  public List<NavigationPoint> getLeft()
+  {
+    return left;
+  }
 
-    model.addAttribute("analyticsCode", ObserverProperties.getAnalyticsCode());
-    model.addAttribute("navigation", new NavigationBean(left, right, active));
+  public List<NavigationPoint> getRight()
+  {
+    return right;
+  }
+
+  public NavigationPoint getActive()
+  {
+    return active;
   }
 }

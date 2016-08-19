@@ -20,34 +20,76 @@
  *
  */
 
-package burstcoin.observer.controller;
+package burstcoin.observer.service.model.asset;
 
+import java.io.Serializable;
 
-import burstcoin.observer.ObserverProperties;
-import burstcoin.observer.bean.NavigationBean;
-import burstcoin.observer.bean.NavigationPoint;
-import org.springframework.ui.Model;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-public class BaseController
+public class Order
+  implements Serializable
 {
-  protected void addNavigationBean(NavigationPoint active, Model model)
+  private String asset;
+  private String order;
+  private String type;
+
+  private String quantityQNT;
+  private String priceNQT;
+  private String accountRS;
+  private String account;
+  private long height;
+
+  protected Order()
   {
-    List<NavigationPoint> left = new ArrayList<>();
-    left.add(NavigationPoint.NETWORK);
-    left.add(NavigationPoint.POOL);
-    left.add(NavigationPoint.ASSET);
-    left.add(NavigationPoint.CROWDFUND);
+  }
 
-    List<NavigationPoint> right = new ArrayList<>();
-    right.add(NavigationPoint.API);
-    right.add(NavigationPoint.GITHUB);
-    Collections.reverse(right);
+  public Order(String asset, String order, String type, String quantityQNT, String priceNQT, String accountRS, String account, long height)
+  {
+    this.asset = asset;
+    this.order = order;
+    this.type = type;
+    this.quantityQNT = quantityQNT;
+    this.priceNQT = priceNQT;
+    this.accountRS = accountRS;
+    this.account = account;
+    this.height = height;
+  }
 
-    model.addAttribute("analyticsCode", ObserverProperties.getAnalyticsCode());
-    model.addAttribute("navigation", new NavigationBean(left, right, active));
+  public String getAsset()
+  {
+    return asset;
+  }
+
+  public String getOrder()
+  {
+    return order;
+  }
+
+  public String getType()
+  {
+    return type;
+  }
+
+  public String getQuantityQNT()
+  {
+    return quantityQNT;
+  }
+
+  public String getPriceNQT()
+  {
+    return priceNQT;
+  }
+
+  public String getAccountRS()
+  {
+    return accountRS;
+  }
+
+  public String getAccount()
+  {
+    return account;
+  }
+
+  public long getHeight()
+  {
+    return height;
   }
 }

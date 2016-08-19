@@ -20,34 +20,34 @@
  *
  */
 
-package burstcoin.observer.controller;
+package burstcoin.observer.service.model.asset;
 
-
-import burstcoin.observer.ObserverProperties;
-import burstcoin.observer.bean.NavigationBean;
-import burstcoin.observer.bean.NavigationPoint;
-import org.springframework.ui.Model;
-
-import java.util.ArrayList;
-import java.util.Collections;
+import java.io.Serializable;
 import java.util.List;
 
-public class BaseController
+public class Trades
+  implements Serializable
 {
-  protected void addNavigationBean(NavigationPoint active, Model model)
+  private List<Trade> trades;
+  private int requestProcessingTime;
+
+  protected Trades()
   {
-    List<NavigationPoint> left = new ArrayList<>();
-    left.add(NavigationPoint.NETWORK);
-    left.add(NavigationPoint.POOL);
-    left.add(NavigationPoint.ASSET);
-    left.add(NavigationPoint.CROWDFUND);
+  }
 
-    List<NavigationPoint> right = new ArrayList<>();
-    right.add(NavigationPoint.API);
-    right.add(NavigationPoint.GITHUB);
-    Collections.reverse(right);
+  public Trades(List<Trade> trades, int requestProcessingTime)
+  {
+    this.trades = trades;
+    this.requestProcessingTime = requestProcessingTime;
+  }
 
-    model.addAttribute("analyticsCode", ObserverProperties.getAnalyticsCode());
-    model.addAttribute("navigation", new NavigationBean(left, right, active));
+  public List<Trade> getTrades()
+  {
+    return trades;
+  }
+
+  public int getRequestProcessingTime()
+  {
+    return requestProcessingTime;
   }
 }

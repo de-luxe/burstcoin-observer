@@ -38,10 +38,9 @@
             <div th:include="navigation"></div>
 
             <div class="jumbotron">
-
                 <h1 class="display-3">Burstcoin Pools</h1>
 
-                <p class="lead">This page updates every <span th:text="${interval / 60}"></span> minutes and shows the Burstcoin Pool-Situation over the last 10
+                <p class="lead">This page updates every <span th:text="${interval / 60}"></span> minutes. (Data updated <span th:text="${lastUpdate / 60}"></span> minutes ago.)<br/>It shows the Burstcoin Pool-Situation over the last 10
                     days (3600 Blocks).</p>
 
                 <table class="table table-hover table-striped">
@@ -57,14 +56,18 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="poolInfo,iterStat : ${poolInfos}" data-toggle="tooltip" th:title="${poolInfo.description}">
-                            <td th:text="${poolInfo.accountRS}"></td>
-                            <td th:text="${poolInfo.name}"></td>
-                            <th scope="row" th:text="${poolInfo.foundBlocks}"></th>
-                            <td th:text="${poolInfo.successfulMiners}"></td>
-                            <td th:text="${poolInfo.assignedMiners}"></td>
-                            <td th:text="${#numbers.formatInteger(poolInfo.earnedAmount,0,'DEFAULT')}"></td>
-                            <td th:text="${#numbers.formatInteger(poolInfo.balance,0,'DEFAULT')}"></td>
+                        <tr th:each="poolBean,iterStat : ${poolBeans}" data-toggle="tooltip" th:title="${poolBean.description}">
+                            <td th:unless="${poolBean.accountRS == 'Solo-Miners'}">
+                                <a th:href="'http://burstcoin.biz/address/' + ${poolBean.accountId}" th:text="${poolBean.accountRS}"
+                                   th:title="'AccountID: '+${poolBean.accountRS}" target="_blank" class="btn-link" style="color: black;"></a>
+                            </td>
+                            <td th:unless="${poolBean.accountRS != 'Solo-Miners'}" th:text="${poolBean.accountRS}"></td>
+                            <td th:text="${poolBean.name}"></td>
+                            <th scope="row" th:text="${poolBean.foundBlocks}"></th>
+                            <td th:text="${poolBean.successfulMiners}"></td>
+                            <td th:text="${poolBean.assignedMiners}"></td>
+                            <td th:text="${#numbers.formatInteger(poolBean.earnedAmount,0,'DEFAULT')}"></td>
+                            <td th:text="${#numbers.formatInteger(poolBean.balance,0,'DEFAULT')}"></td>
                         </tr>
                     </tbody>
                 </table>

@@ -279,7 +279,7 @@ public class NetworkService
       }
       catch(Exception e)
       {
-        LOG.warn("Unable to get mining info from wallet for '" + server + "': " + e.getMessage());
+        LOG.info("Unable to get mining info from wallet for '" + server + "'");
       }
     }
 

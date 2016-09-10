@@ -62,8 +62,8 @@ public class AssetBean
     this.numberOfTrades = numberOfTrades;
     this.numberOfBuyOrders = numberOfBuyOrders;
     this.numberOfSellOrders = numberOfSellOrders;
-    this.volume7Days = volume7Days;
-    this.volume30Days = volume30Days;
+    this.volume7Days = volume7Days.equals("") ? "0" : volume7Days;
+    this.volume30Days = volume30Days.equals("") ? "0" : volume30Days;
 
     this.lastPrice = lastPrice;
   }

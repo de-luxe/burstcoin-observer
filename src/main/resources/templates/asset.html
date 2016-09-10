@@ -50,7 +50,7 @@
                             <th>Asks</th>
                             <th>Bids</th>
                             <th>Trades</th>
-                            <!--<th>Last Price</th>-->
+                            <th>Price</th>
                             <th>VolumeWeek</th>
                             <th>VolumeMonth</th>
                         </tr>
@@ -61,9 +61,9 @@
                                 <td>
                                     <span>
                                         <a th:href="'http://burstcoin.biz/transaction/' + ${assetBean.asset}" th:text="${assetBean.asset}"
-                                           th:title="'TransactionID: '+${assetBean.asset}" target="_blank" class="btn-link" style="color: black;"></a> -
+                                           th:title="'TransactionID: '+${assetBean.asset}" target="_blank" class="btn-link" style="color: black;"></a>
                                         <a th:href="'https://wallet.burst-team.us/index.html#asset:' + ${assetBean.asset}"
-                                           title="Open in Asset-Exchange, using Online-Wallet." target="_blank" class="btn-link" style="color: black;">O</a> /
+                                           title="Open in Asset-Exchange, using Online-Wallet." target="_blank" class="btn-link" style="color: black;">O</a>
                                         <a th:href="'http://localhost:8125/index.html#asset:' + ${assetBean.asset}"
                                            title="Open in Asset-Exchange, using Local-Wallet." target="_blank" class="btn-link" style="color: black;">L</a>
                                     </span>
@@ -76,12 +76,12 @@
                                 <td th:text="${assetBean.numberOfSellOrders}"></td>
                                 <td th:text="${assetBean.numberOfBuyOrders}"></td>
                                 <td th:text="${assetBean.numberOfTrades}"></td>
-                                <!--<td th:text="${assetInfo.lastPrice}"></td>-->
+                                <td th:text="${assetBean.lastPrice}"></td>
                                 <th scope="row" th:text="${#numbers.formatInteger(assetBean.volume7Days,0,'DEFAULT')}"></th>
                                 <td th:text="${#numbers.formatInteger(assetBean.volume30Days,0,'DEFAULT')}"></td>
                             </tr>
                             <tr>
-                                <td th:text="${assetBean.description}" colspan="8"></td>
+                                <td th:text="${assetBean.description}" colspan="9"></td>
                             </tr>
                         </div>
                     </tbody>

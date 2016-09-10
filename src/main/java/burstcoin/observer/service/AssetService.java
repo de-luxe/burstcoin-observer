@@ -72,7 +72,7 @@ public class AssetService
           LOG.info("START import asset data from " + ObserverProperties.getWalletUrl());
           Map<String, Asset> assetLookup = createAssetLookup();
           Map<OrderType, Map<Asset, List<Order>>> orderLookup = createOrderLookup(assetLookup);
-          Map<Asset, List<Trade>> tradeLookup = createTradeLookup(assetLookup);
+          Map<Asset, List<Trade>> tradeLookup = getTradeLookup(assetLookup);
 
           State state = getState();
           LOG.info("FINISH import asset data!");
@@ -83,7 +83,7 @@ public class AssetService
             long volume7Days = 0L;
             long volume30Days = 0L;
             Long lastPrice = null;
-
+            String s = "";
             List<Trade> trades = tradeLookup.get(asset);
             if(trades != null && !trades.isEmpty())
             {
@@ -93,29 +93,30 @@ public class AssetService
               while(withinLast30Days && iterator.hasNext())
               {
                 Trade trade = iterator.next();
-//          if(lastPrice == null)
-//          {
-//            lastPrice = Long.valueOf(trade.getPriceNQT());
-//
-//            System.out.println("---------------------------------");
-//            System.out.println("trade price: " + trade.getPriceNQT());
-//            System.out.println("trade amount: " + trade.getQuantityQNT());
-//            System.out.println("asset decimals: " + asset.getDecimals());
-//            int sub = trade.getPriceNQT().length() - asset.getDecimals();
-////            if(asset.getDecimals() > 0)
-////            {
-////              sub = trade.getPriceNQT().length() - asset.getDecimals();
-////            }
-//            if(trade.getPriceNQT().length() > sub)
-//            {
-//              System.out.println("price1: " + trade.getPriceNQT().substring(0, sub));
-//            }
-//            else
-//            {
-//              System.out.println("price1: " + "> 1");
-//            }
-////            System.out.println("price1: " + trade.getPriceNQT().substring(0, trade.getPriceNQT().length() - asset.getDecimals()));
-//          }
+                if(lastPrice == null)
+                {
+                  lastPrice = Long.valueOf(trade.getPriceNQT());
+
+                  if(lastPrice < 100000000)
+                  {
+                    s = String.valueOf(100000000 + lastPrice);
+                    s = "0." + s.substring(1, s.length());
+                  }
+                  else
+                  {
+                    s = String.valueOf(lastPrice);
+                    s = s.substring(0, s.length() - 8) + "." + s.substring(s.length() - 8, s.length());
+                  }
+                  while(s.lastIndexOf("0") == s.length() - 1)
+                  {
+                    s = s.substring(0, s.length() - 1);
+                  }
+                  if(s.lastIndexOf(".") == s.length() - 1)
+                  {
+                    s = s.substring(0, s.length() - 1);
+                  }
+                }
+
 
                 Integer bidOrderBlock = Integer.valueOf(trade.getBidOrderHeight());
                 Integer askOrderBlock = Integer.valueOf(trade.getAskOrderHeight());
@@ -141,11 +142,11 @@ public class AssetService
 
             if(!(buyOrders.isEmpty() && sellOrders.isEmpty() && asset.getNumberOfTrades() < 2))
             {
+
               assetBeans.add(new AssetBean(asset.getAsset(), asset.getName(), asset.getDescription(), asset.getAccountRS(), asset.getAccount(),
                                            asset.getQuantityQNT(), asset.getDecimals(), asset.getNumberOfAccounts(), asset.getNumberOfTransfers(),
                                            asset.getNumberOfTrades(), buyOrders.size(), sellOrders.size(),
-                                           formatAmountNQT(volume7Days, 8), formatAmountNQT(volume30Days, 8),
-                                           "N/A")); // lastPrice != null ? formatAmountNQT(lastPrice, asset.getDecimals() > 0 ? asset.getDecimals() : 8) : "N/A")
+                                           formatAmountNQT(volume7Days, 8), formatAmountNQT(volume30Days, 8) , s));
             }
           }
           Collections.sort(assetBeans, new Comparator<AssetBean>()
@@ -178,7 +179,6 @@ public class AssetService
   private String formatAmountNQT(Long amount, int decimals)
   {
     String amountStr = String.valueOf(amount);
-//    return amountStr;
     return amount != null && amountStr.length() >= decimals ? amountStr.substring(0, amountStr.length() - decimals) : "" + amount;
   }
 
@@ -206,15 +206,30 @@ public class AssetService
     return assetLookup;
   }
 
-  private Map<Asset, List<Trade>> createTradeLookup(Map<String, Asset> assetLookup)
+  private Map<Asset, List<Trade>> getTradeLookup(Map<String, Asset> assetLookup)
   {
     Map<Asset, List<Trade>> tradeLookup = new HashMap<>();
+    boolean hasMoreTransactions = true;
+    int offset = 0;
+    int transactionsPerRequest = 1999;
+    while(hasMoreTransactions)
+    {
+      hasMoreTransactions = updateTradeLookup(tradeLookup, assetLookup, offset, transactionsPerRequest);
+      offset += transactionsPerRequest;
+    }
+    return tradeLookup;
+  }
+
+  private boolean updateTradeLookup(Map<Asset, List<Trade>> tradeLookup, Map<String, Asset> assetLookup, int offset, int transactionsPerRequest)
+  {
+    boolean hasMoreTrades = true;
     try
     {
       InputStreamResponseListener listener = new InputStreamResponseListener();
 
       Request request = httpClient.newRequest(ObserverProperties.getWalletUrl() + "/burst?requestType=getAllTrades")
-//        .param("requestType", "getAllTrades")
+        .param("firstIndex", String.valueOf(offset))
+        .param("lastIndex", String.valueOf(offset + transactionsPerRequest))
         .timeout(ObserverProperties.getConnectionTimeout(), TimeUnit.MILLISECONDS);
       request.send(listener);
 
@@ -227,6 +242,11 @@ public class AssetService
         try (InputStream responseContent = listener.getInputStream())
         {
           Trades trades = objectMapper.readValue(responseContent, Trades.class);
+          if(!trades.getTrades().isEmpty() && trades.getTrades().size() < transactionsPerRequest)
+          {
+            hasMoreTrades = false;
+          }
+
           for(Trade trade : trades.getTrades())
           {
             Asset asset = assetLookup.get(trade.getAsset());
@@ -249,9 +269,8 @@ public class AssetService
     {
       LOG.warn("Error: Failed to 'getAllTrades': " + e.getMessage());
     }
-    return tradeLookup;
+    return hasMoreTrades;
   }
-
 
   private State getState()
   {
@@ -261,8 +280,6 @@ public class AssetService
       InputStreamResponseListener listener = new InputStreamResponseListener();
 
       Request request = httpClient.newRequest(ObserverProperties.getWalletUrl() + "/burst?requestType=getState&includeCounts=true")
-//        .param("requestType", "getState")
-//        .param("includeCounts", "true")
         .timeout(ObserverProperties.getConnectionTimeout(), TimeUnit.MILLISECONDS);
       request.send(listener);
 

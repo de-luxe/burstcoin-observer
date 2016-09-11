@@ -4,9 +4,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-parent</artifactId>
-      <version>1.4.0.RELEASE</version>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>1.4.0.RELEASE</version>
   </parent>
 
   <name>burstcoin-observer</name>
@@ -60,10 +60,54 @@
 
   <build>
     <plugins>
+
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>ant-clear</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <!-- clear dist dir -->
+                <delete dir="${project.basedir}/dist"/>
+                <mkdir dir="${project.basedir}/dist"/>
+                <mkdir dir="${project.basedir}/dist/tmp"/>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
+            <id>ant-zip</id>
+            <phase>package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <copy file="${project.basedir}/target/${project.build.finalName}.jar" tofile="${project.basedir}/dist/tmp/${project.build.finalName}.jar"/>
+                <copy file="${project.basedir}/observer.default.properties" tofile="${project.basedir}/dist/tmp/faucet.properties"/>
+                <copy file="${project.basedir}/LICENSE.md" tofile="${project.basedir}/dist/tmp/LICENSE.txt"/>
+                <copy file="${project.basedir}/README.md" tofile="${project.basedir}/dist/tmp/README.txt"/>
+                <copy file="${project.basedir}/run.bat" tofile="${project.basedir}/dist/tmp/run.sh"/>
+                <copy file="${project.basedir}/run.bat" tofile="${project.basedir}/dist/tmp/run.bat"/>
+                <!-- create zip file -->
+                <zip destfile="${project.basedir}/dist/${project.build.finalName}.zip" basedir="${project.basedir}/dist/tmp"/>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
 

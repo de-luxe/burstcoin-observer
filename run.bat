@@ -1,0 +1,1 @@
+java -jar burstcoin-observer-0.2.4-SNAPSHOT.jar

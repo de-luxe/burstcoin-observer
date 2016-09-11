@@ -40,7 +40,6 @@ import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -73,9 +72,6 @@ public class ATService
 
   @Autowired
   private HttpClient httpClient;
-
-  @Autowired
-  private ApplicationEventPublisher publisher;
 
   @Autowired
   private ApplicationContext context;
@@ -220,7 +216,7 @@ public class ATService
               });
 
               // todo no idea why this currently does not work
-              // publisher.publishEvent(new ATDataUpdateEvent(state, atLookup));
+              // context.publishEvent(new CrowdfundUpdateEvent(crowdfundBeans));
               // workaround:
               context.getBean(CrowdfundController.class).handleMessage(new CrowdfundUpdateEvent(crowdfundBeans));
             }
@@ -296,17 +292,16 @@ public class ATService
         try (InputStream responseContent = listener.getInputStream())
         {
           state = objectMapper.readValue(responseContent, State.class);
-//          LOG.info("received '" + trades.getTrades().size() + "' trades in '" + trades.getRequestProcessingTime() + "' ms");
         }
         catch(Exception e)
         {
-          LOG.error("Failed to receive faucet account transactions.");
+          LOG.error("Failed to receive state.");
         }
       }
     }
     catch(Exception e)
     {
-      LOG.warn("Error: Failed to 'getAllTrades': " + e.getMessage());
+      LOG.warn("Error: Failed to 'getState': " + e.getMessage());
     }
     return state;
   }

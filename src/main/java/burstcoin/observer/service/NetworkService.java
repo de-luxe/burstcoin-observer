@@ -76,6 +76,7 @@ public class NetworkService
   private Long lastBlockWithSameGenSig;
   private boolean forkMailSend = false;
   private Long lastBlockWithSameGenSigMailSend = 0L;
+  private Map<String, NetworkState> previousStateLookup = new HashMap<>();
 
   @PostConstruct
   private void postConstruct()
@@ -187,10 +188,21 @@ public class NetworkService
               }
             }
           }
+          
+          long maxHeight = 0;
+          
+          for(NetworkBean networkBean : networkBeans)
+          {
+            if(networkBean.getAvailable())
+            {
+              maxHeight = Math.max(Long.valueOf(networkBean.getHeight()), maxHeight);
+            }
+          }
 
           boolean appStartedAfterForkHappened = lastBlockWithSameGenSig == null;
 
           boolean sendMail = false;
+          
           for(NetworkBean networkBean : networkBeans)
           {
             if(networkBean.getAvailable())
@@ -201,6 +213,27 @@ public class NetworkService
               {
                 networkBean.setState(NetworkState.FORKED);
                 sendMail = true;
+              }
+                            
+              if (height + 4 < maxHeight) // when the wallet is 4 blocks behind -> stuck
+              {
+            	if (!networkBean.getState().equals(NetworkState.FORKED)) // if it's forked, then ignore the stuck-check, because forks may also be behind
+            	{
+  				  networkBean.setState(NetworkState.STUCK);
+				
+				  if (ObserverProperties.isEnableStuckNotify() &&
+					  (!previousStateLookup.containsKey(networkBean.getDomain()) || previousStateLookup.get(networkBean.getDomain()).equals(NetworkState.STUCK)) //send only once
+				     )
+				  {
+  				    SimpleMailMessage mailMessage = new SimpleMailMessage();
+				    mailMessage.setTo(ObserverProperties.getMailReceiver());
+				    mailMessage.setReplyTo(ObserverProperties.getMailReplyTo());
+				    mailMessage.setFrom(ObserverProperties.getMailSender());
+				    mailMessage.setSubject("Burstcoin-Observer - Stuck at block: " + networkBean.getHeight().toString());
+				    mailMessage.setText(networkBean.getDomain() + "\r\n" + "Please check: " + ObserverProperties.getObserverUrl());
+				    mailSender.send(mailMessage);
+				  }
+            	}
               }
             }
           }
@@ -217,8 +250,8 @@ public class NetworkService
 
               SimpleMailMessage mailMessage = new SimpleMailMessage();
               mailMessage.setTo(ObserverProperties.getMailReceiver());
-              mailMessage.setReplyTo("do-not-reply@burst-team.us");
-              mailMessage.setFrom("do-not-reply@burst-team.us");
+              mailMessage.setReplyTo(ObserverProperties.getMailReplyTo());
+              mailMessage.setFrom(ObserverProperties.getMailSender());
               mailMessage.setSubject("Burstcoin-Observer - Fork after block: " + lastBlockWithSameGenSig);
               mailMessage.setText("Please check: " + ObserverProperties.getObserverUrl());
               mailSender.send(mailMessage);
@@ -228,7 +261,16 @@ public class NetworkService
           {
             forkMailSend = false;
           }
-
+          
+          // store the network state for next check-loop 
+          for(NetworkBean networkBean : networkBeans)
+          {
+            if(networkBean.getAvailable() && networkBean.getDomain() != null)
+            {
+              previousStateLookup.put(networkBean.getDomain(), networkBean.getState());
+            }
+          }
+          
           publisher.publishEvent(new NetworkUpdateEvent(networkBeans, lastBlockWithSameGenSig));
         }
         catch(Exception e)

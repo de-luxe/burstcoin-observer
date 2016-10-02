@@ -222,7 +222,7 @@ public class NetworkService
   				  networkBean.setState(NetworkState.STUCK);
 				
 				  if (ObserverProperties.isEnableStuckNotify() &&
-					  (!previousStateLookup.containsKey(networkBean.getDomain()) || previousStateLookup.get(networkBean.getDomain()).equals(NetworkState.STUCK)) //send only once
+					  (!previousStateLookup.containsKey(networkBean.getDomain()) || !previousStateLookup.get(networkBean.getDomain()).equals(NetworkState.STUCK)) //send only once
 				     )
 				  {
   				    SimpleMailMessage mailMessage = new SimpleMailMessage();

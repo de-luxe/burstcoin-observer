@@ -64,7 +64,10 @@ public class ObserverProperties
   private static List<String> networkServers;
 
   private static Boolean enableForkNotify;
+  private static Boolean enableStuckNotify;
   private static String mailReceiver;
+  private static String mailSender;
+  private static String mailReplyTo;
   private static String mailProtocol;
   private static String mailHost;
   private static Integer mailPort;
@@ -83,6 +86,24 @@ public class ObserverProperties
       mailReceiver = asString("burstcoin.observer.mail.receiver", "");
     }
     return mailReceiver;
+  }
+  
+  public static String getMailSender()
+  {
+    if(mailSender == null)
+    {
+	  mailSender = asString("burstcoin.observer.mail.sender", "");
+    }
+    return mailSender;
+  }
+  
+  public static String getMailReplyTo()
+  {
+    if(mailReplyTo == null)
+    {
+      mailReplyTo = asString("burstcoin.observer.mail.replyto", "");
+    }
+    return mailReplyTo;
   }
 
   public static String getMailProtocol()
@@ -146,6 +167,15 @@ public class ObserverProperties
       enableForkNotify = asBoolean("burstcoin.observer.mail.enableForkNotify", false);
     }
     return enableForkNotify;
+  }
+  
+  public static boolean isEnableStuckNotify()
+  {
+    if(enableStuckNotify == null)
+    {
+      enableStuckNotify = asBoolean("burstcoin.observer.mail.enableStuckNotify", false);
+    }
+    return enableStuckNotify;
   }
 
   public static boolean isUseSocksProxy()

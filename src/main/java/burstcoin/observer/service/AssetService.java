@@ -146,7 +146,7 @@ public class AssetService
               assetBeans.add(new AssetBean(asset.getAsset(), asset.getName(), asset.getDescription(), asset.getAccountRS(), asset.getAccount(),
                                            asset.getQuantityQNT(), asset.getDecimals(), asset.getNumberOfAccounts(), asset.getNumberOfTransfers(),
                                            asset.getNumberOfTrades(), buyOrders.size(), sellOrders.size(),
-                                           formatAmountNQT(volume7Days, 8), formatAmountNQT(volume30Days, 8) , s));
+                                           formatAmountNQT(volume7Days, 8), formatAmountNQT(volume30Days, 8), s));
             }
           }
           Collections.sort(assetBeans, new Comparator<AssetBean>()
@@ -222,7 +222,7 @@ public class AssetService
 
   private boolean updateTradeLookup(Map<Asset, List<Trade>> tradeLookup, Map<String, Asset> assetLookup, int offset, int transactionsPerRequest)
   {
-    boolean hasMoreTrades = true;
+    boolean hasMoreTrades = false;
     try
     {
       InputStreamResponseListener listener = new InputStreamResponseListener();
@@ -242,9 +242,9 @@ public class AssetService
         try (InputStream responseContent = listener.getInputStream())
         {
           Trades trades = objectMapper.readValue(responseContent, Trades.class);
-          if(!trades.getTrades().isEmpty() && trades.getTrades().size() < transactionsPerRequest)
+          if(!trades.getTrades().isEmpty() && trades.getTrades().size() >= transactionsPerRequest)
           {
-            hasMoreTrades = false;
+            hasMoreTrades = true;
           }
 
           for(Trade trade : trades.getTrades())
@@ -284,17 +284,11 @@ public class AssetService
       request.send(listener);
 
       Response response = listener.get(ObserverProperties.getConnectionTimeout(), TimeUnit.MILLISECONDS);
-
-      // Look at the response
       if(response.getStatus() == 200)
       {
-        // Use try-with-resources to close input stream.
         try (InputStream responseContent = listener.getInputStream())
         {
           state = objectMapper.readValue(responseContent, State.class);
-
-
-//          LOG.info("received '" + trades.getTrades().size() + "' trades in '" + trades.getRequestProcessingTime() + "' ms");
         }
         catch(Exception e)
         {

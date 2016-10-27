@@ -23,9 +23,10 @@ import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-
+import org.springframework.util.StringUtils;
 import javax.annotation.PostConstruct;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -82,8 +83,7 @@ public class AssetService
           {
             long volume7Days = 0L;
             long volume30Days = 0L;
-            Long lastPrice = null;
-            String s = "";
+            String lastPrice = "";
             List<Trade> trades = tradeLookup.get(asset);
             if(trades != null && !trades.isEmpty())
             {
@@ -93,30 +93,10 @@ public class AssetService
               while(withinLast30Days && iterator.hasNext())
               {
                 Trade trade = iterator.next();
-                if(lastPrice == null)
+                if(StringUtils.isEmpty(lastPrice))
                 {
-                  lastPrice = Long.valueOf(trade.getPriceNQT());
-
-                  if(lastPrice < 100000000)
-                  {
-                    s = String.valueOf(100000000 + lastPrice);
-                    s = "0." + s.substring(1, s.length());
-                  }
-                  else
-                  {
-                    s = String.valueOf(lastPrice);
-                    s = s.substring(0, s.length() - 8) + "." + s.substring(s.length() - 8, s.length());
-                  }
-                  while(s.lastIndexOf("0") == s.length() - 1)
-                  {
-                    s = s.substring(0, s.length() - 1);
-                  }
-                  if(s.lastIndexOf(".") == s.length() - 1)
-                  {
-                    s = s.substring(0, s.length() - 1);
-                  }
+                  lastPrice = convertPrice(trade.getPriceNQT(), trade.getDecimals());
                 }
-
 
                 Integer bidOrderBlock = Integer.valueOf(trade.getBidOrderHeight());
                 Integer askOrderBlock = Integer.valueOf(trade.getAskOrderHeight());
@@ -125,7 +105,6 @@ public class AssetService
 
                 if(withinLast30Days)
                 {
-
                   long volume = Long.valueOf(trade.getPriceNQT()) * Long.valueOf(trade.getQuantityQNT());
                   volume30Days += volume;
 
@@ -146,7 +125,7 @@ public class AssetService
               assetBeans.add(new AssetBean(asset.getAsset(), asset.getName(), asset.getDescription(), asset.getAccountRS(), asset.getAccount(),
                                            asset.getQuantityQNT(), asset.getDecimals(), asset.getNumberOfAccounts(), asset.getNumberOfTransfers(),
                                            asset.getNumberOfTrades(), buyOrders.size(), sellOrders.size(),
-                                           formatAmountNQT(volume7Days, 8), formatAmountNQT(volume30Days, 8), s));
+                                           formatAmountNQT(volume7Days, 8), formatAmountNQT(volume30Days, 8), lastPrice));
             }
           }
           Collections.sort(assetBeans, new Comparator<AssetBean>()
@@ -170,10 +149,44 @@ public class AssetService
         }
         catch(Exception e)
         {
-          LOG.error("Failed update assets!");
+          LOG.error("Failed update assets!", e);
         }
       }
     }, 200, ObserverProperties.getAssetRefreshInterval());
+  }
+
+  private String convertPrice(String priceString, int decimals)
+  {
+    BigInteger price = new BigInteger(priceString);
+    BigInteger amount = price.multiply(new BigInteger("" + (long) Math.pow(10, decimals)));
+    String negative = "";
+    String afterComma = "";
+    String fractionalPart = amount.mod(new BigInteger("100000000")).toString();
+    amount = amount.divide(new BigInteger("100000000"));
+    if(amount.compareTo(BigInteger.ZERO) < 0)
+    {
+      amount = amount.abs();
+      negative = "-";
+    }
+    if(!fractionalPart.equals("0"))
+    {
+      afterComma = ".";
+      for(int i = fractionalPart.length(); i < 8; i++)
+      {
+        afterComma += "0";
+      }
+      afterComma += fractionalPart.replace("0+$", "");
+    }
+    String result = negative + amount + afterComma;
+    while(result.lastIndexOf("0") == result.length() - 1)
+    {
+      result = result.substring(0, result.length() - 1);
+    }
+    if(result.lastIndexOf(".") == result.length() - 1)
+    {
+      result = result.substring(0, result.length() - 1);
+    }
+    return result;
   }
 
   private String formatAmountNQT(Long amount, int decimals)
@@ -349,4 +362,21 @@ public class AssetService
     }
     orderLookup.put(orderType, askOrderLookup);
   }
+
+  // 3 possibilities to blacklist a asset
+  // - issuer has blacklisted it (has to send assetId to provided account (from asset or issuer account))
+  // - blacklisted in properties
+  // - blacklisted via trusted community member accounts (from properties)
+  private List<String> getBlacklistedAssets()
+  {
+    // todo get messages from blacklist account
+    // todo filter valid messages
+    // todo filter allowed messages by moderator / issuer
+    // todo re-add whitelisted
+    // todo return remaining assetIds
+
+
+    return null;
+  }
+
 }

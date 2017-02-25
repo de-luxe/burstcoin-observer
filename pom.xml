@@ -6,13 +6,13 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>1.4.0.RELEASE</version>
+    <version>1.5.1.RELEASE</version>
   </parent>
 
   <name>burstcoin-observer</name>
   <groupId>burstcoin</groupId>
   <artifactId>burstcoin-observer</artifactId>
-  <version>0.2.5-SNAPSHOT</version>
+  <version>0.2.6-SNAPSHOT</version>
 
   <properties>
     <java.version>1.8</java.version>

@@ -31,6 +31,7 @@ public class NetworkBean
   private String generationSignature;
   private String targetDeadline;
   private String type;
+  private String https;
 
   private NetworkState state;
 
@@ -47,18 +48,19 @@ public class NetworkBean
     this.available = false;
   }
 
-  public NetworkBean(String height, String domain, String url, String baseTarget, String generationSignature, String targetDeadline)
+  public NetworkBean(String height, String domain, String url, String baseTarget, String generationSignature, String targetDeadline, String https)
   {
     this.height = height;
     this.domain = domain;
     this.url = url;
     this.baseTarget = baseTarget;
     this.generationSignature = generationSignature;
+    this.https = https;
     this.state = NetworkState.OK;
     this.available = true;
 
     // week impl. wallet with pool in domain will show up as pool
-    this.type = targetDeadline.equals("0") ? domain.contains("faucet") ? "Faucet" : "Wallet" : "Pool";
+    this.type = targetDeadline.equals("0") ? domain.contains("faucet") ? "Faucet" : domain.contains("pool") ? "Pool" : "Wallet" : "Pool";
     this.targetDeadline = targetDeadline.equals("0") ? "Pool".equals(type) ? "Unlimited" : "N/A" : targetDeadline;
   }
 
@@ -105,6 +107,11 @@ public class NetworkBean
   public String getUrl()
   {
     return url;
+  }
+
+  public String getHttps()
+  {
+    return https;
   }
 
   public Boolean getAvailable()

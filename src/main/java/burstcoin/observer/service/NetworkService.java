@@ -115,24 +115,42 @@ public class NetworkService
           {
             MiningInfo miningInfo = entry.getValue();
 
+            String https = entry.getKey().contains("https://") ? "Yes" : "No";
             String domain = entry.getKey().replace("http://", "").replace("https://", "");
             if(miningInfo != null && miningInfo.getGenerationSignature() != null)
             {
               networkBeans.add(new NetworkBean(String.valueOf(miningInfo.getHeight()), domain, entry.getKey(), miningInfo.getBaseTarget(),
                                                miningInfo.getGenerationSignature().substring(0, 25) + "...",
-                                               String.valueOf(miningInfo.getTargetDeadline())));
+                                               String.valueOf(miningInfo.getTargetDeadline()), https));
             }
             else
             {
               networkBeans.add(new NetworkBean(domain));
             }
           }
+
           Collections.sort(networkBeans, new Comparator<NetworkBean>()
           {
             @Override
             public int compare(NetworkBean o1, NetworkBean o2)
             {
               return o1.getBaseTarget().compareTo(o2.getBaseTarget());
+            }
+          });
+          Collections.sort(networkBeans, new Comparator<NetworkBean>()
+          {
+            @Override
+            public int compare(NetworkBean o1, NetworkBean o2)
+            {
+              return o2.getDomain().compareTo(o1.getDomain());
+            }
+          });
+          Collections.sort(networkBeans, new Comparator<NetworkBean>()
+          {
+            @Override
+            public int compare(NetworkBean o1, NetworkBean o2)
+            {
+              return o2.getType().compareTo(o1.getType());
             }
           });
           Collections.sort(networkBeans, new Comparator<NetworkBean>()

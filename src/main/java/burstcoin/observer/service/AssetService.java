@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
 import javax.annotation.PostConstruct;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -178,7 +179,7 @@ public class AssetService
       afterComma += fractionalPart.replace("0+$", "");
     }
     String result = negative + amount + afterComma;
-    while(result.lastIndexOf("0") == result.length() - 1)
+    while(result.lastIndexOf("0") == result.length() - 1 && result.contains("."))
     {
       result = result.substring(0, result.length() - 1);
     }
@@ -189,10 +190,11 @@ public class AssetService
     return result;
   }
 
+  // without decimal
   private String formatAmountNQT(Long amount, int decimals)
   {
     String amountStr = String.valueOf(amount);
-    return amount != null && amountStr.length() >= decimals ? amountStr.substring(0, amountStr.length() - decimals) : "" + amount;
+    return amount != null && amountStr.length() >= decimals ? amountStr.substring(0, amountStr.length() - decimals) : "" + 0;
   }
 
   private Map<String, Asset> createAssetLookup()

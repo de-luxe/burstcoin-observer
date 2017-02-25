@@ -30,9 +30,10 @@
                 <table class="table table-hover table-striped">
                     <thead>
                         <tr>
-                            <th>Block</th>
+                            <th>Next Block</th>
                             <th>BaseTarget</th>
                             <th>Type</th>
+
                             <th>Domain</th>
                             <th>GenerationSignature</th>
                             <th>TargetDeadline</th>
@@ -44,8 +45,12 @@
                             <th scope="row" th:text="${networkBean.height}"></th>
                             <td th:text="${networkBean.baseTarget}"></td>
                             <td th:text="${networkBean.type}"></td>
+
                             <td >
-                                <a data-toggle="tooltip" data-placement="right" th:href="${networkBean.url}" th:text="${networkBean.domain}" th:title="${networkBean.url}" target="_blank" class="btn-link" style="color: black;"></a>
+                                <span th:text="${networkBean.https=='Yes' ? '&#x1f512;' : '&#x1f513;'}"></span>
+                                <a data-toggle="tooltip" data-placement="right" th:href="${networkBean.url}" th:text="${networkBean.domain}"
+                                   th:title="${networkBean.url}" target="_blank" class="btn-link" style="color: black;">
+                                </a>
                             </td>
                             <td th:text="${networkBean.generationSignature}"></td>
                             <td th:text="${networkBean.targetDeadline}"></td>

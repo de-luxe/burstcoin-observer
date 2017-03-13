@@ -2,6 +2,7 @@ package burstcoin.observer.service;
 
 
 import burstcoin.observer.ObserverProperties;
+import burstcoin.observer.bean.PoolBean;
 import burstcoin.observer.event.PoolUpdateEvent;
 import burstcoin.observer.service.model.Account;
 import burstcoin.observer.service.model.AccountIds;
@@ -9,7 +10,6 @@ import burstcoin.observer.service.model.Block;
 import burstcoin.observer.service.model.BlockchainStatus;
 import burstcoin.observer.service.model.Blocks;
 import burstcoin.observer.service.model.RewardRecipient;
-import burstcoin.observer.bean.PoolBean;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

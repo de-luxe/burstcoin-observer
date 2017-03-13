@@ -23,17 +23,20 @@
 package burstcoin.observer.service;
 
 import burstcoin.observer.ObserverProperties;
-import burstcoin.observer.event.NetworkUpdateEvent;
-import burstcoin.observer.service.model.MiningInfo;
 import burstcoin.observer.bean.NetworkBean;
 import burstcoin.observer.bean.NetworkState;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import burstcoin.observer.event.NetworkUpdateEvent;
+import burstcoin.observer.service.model.MiningInfo;
+import burstcoin.observer.service.network.GetMiningInfoTask;
+import burstcoin.observer.service.network.MiningInfoEvent;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
@@ -50,8 +53,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @Component
 public class NetworkService
@@ -59,24 +60,26 @@ public class NetworkService
   private static Log LOG = LogFactory.getLog(NetworkService.class);
 
   @Autowired
-  private ObjectMapper objectMapper;
-
-  @Autowired
-  private HttpClient httpClient;
-
-  @Autowired
   private ApplicationEventPublisher publisher;
+
+  @Autowired
+  private BeanFactory beanFactory;
 
   @Autowired
   private JavaMailSender mailSender;
 
+  @Autowired
+  @Qualifier("networkTaskExecutor")
+  private SimpleAsyncTaskExecutor taskExecutor;
+
   private Timer timer = new Timer();
   // blockHeight -> genSig -> domains
   private Map<Long, Map<String, Set<String>>> genSigLookup = new HashMap<>();
-  private Long lastBlockWithSameGenSig;
   private boolean forkMailSend = false;
   private Long lastBlockWithSameGenSigMailSend = 0L;
   private Map<String, NetworkState> previousStateLookup = new HashMap<>();
+
+  private static final Map<String, MiningInfo> miningInfoLookup = new HashMap<>();
 
   @PostConstruct
   private void postConstruct()
@@ -92,200 +95,212 @@ public class NetworkService
       @Override
       public void run()
       {
-        try
+        // only start if previous is finished
+        if(miningInfoLookup.isEmpty())
         {
-          Map<String, MiningInfo> miningInfoLookup = new HashMap<>();
-
-          // update compare wallets data
-          for(String networkServerUrls : ObserverProperties.getNetworkServerUrls())
+          try
           {
-            MiningInfo miningInfo = getMiningInfo(networkServerUrls);
-            if(miningInfo != null)
+            for(String networkServerUrl : ObserverProperties.getNetworkServerUrls())
             {
-              miningInfoLookup.put(networkServerUrls, miningInfo);
-            }
-            else
-            {
-              miningInfoLookup.put(networkServerUrls, null);
+              GetMiningInfoTask getMiningInfoTask = beanFactory.getBean(GetMiningInfoTask.class, networkServerUrl);
+              taskExecutor.execute(getMiningInfoTask);
             }
           }
-
-          List<NetworkBean> networkBeans = new ArrayList<>();
-          for(Map.Entry<String, MiningInfo> entry : miningInfoLookup.entrySet())
+          catch(Exception e)
           {
-            MiningInfo miningInfo = entry.getValue();
-
-            String https = entry.getKey().contains("https://") ? "Yes" : "No";
-            String domain = entry.getKey().replace("http://", "").replace("https://", "");
-            if(miningInfo != null && miningInfo.getGenerationSignature() != null)
-            {
-              networkBeans.add(new NetworkBean(String.valueOf(miningInfo.getHeight()), domain, entry.getKey(), miningInfo.getBaseTarget(),
-                                               miningInfo.getGenerationSignature().substring(0, 25) + "...",
-                                               String.valueOf(miningInfo.getTargetDeadline()), https));
-            }
-            else
-            {
-              networkBeans.add(new NetworkBean(domain));
-            }
+            LOG.error("Failed receiving Network data.");
           }
-
-          Collections.sort(networkBeans, new Comparator<NetworkBean>()
-          {
-            @Override
-            public int compare(NetworkBean o1, NetworkBean o2)
-            {
-              return o1.getBaseTarget().compareTo(o2.getBaseTarget());
-            }
-          });
-          Collections.sort(networkBeans, new Comparator<NetworkBean>()
-          {
-            @Override
-            public int compare(NetworkBean o1, NetworkBean o2)
-            {
-              return o2.getDomain().compareTo(o1.getDomain());
-            }
-          });
-          Collections.sort(networkBeans, new Comparator<NetworkBean>()
-          {
-            @Override
-            public int compare(NetworkBean o1, NetworkBean o2)
-            {
-              return o2.getType().compareTo(o1.getType());
-            }
-          });
-          Collections.sort(networkBeans, new Comparator<NetworkBean>()
-          {
-            @Override
-            public int compare(NetworkBean o1, NetworkBean o2)
-            {
-              return o2.getHeight().compareTo(o1.getHeight());
-            }
-          });
-
-          // update genSig Lookup
-          int numberOfNotAvailableDomains = 0;
-          for(NetworkBean networkBean : networkBeans)
-          {
-            if(networkBean.getAvailable())
-            {
-              Long height = Long.valueOf(networkBean.getHeight());
-              if(!genSigLookup.containsKey(height))
-              {
-                genSigLookup.put(height, new HashMap<>());
-              }
-              Map<String, Set<String>> subMap = genSigLookup.get(height);
-              if(!subMap.containsKey(networkBean.getGenerationSignature()))
-              {
-                subMap.put(networkBean.getGenerationSignature(), new HashSet<>());
-              }
-              Set<String> domains = subMap.get(networkBean.getGenerationSignature());
-              domains.add(networkBean.getDomain());
-            }
-            else
-            {
-              // N/A
-              numberOfNotAvailableDomains++;
-            }
-          }
-
-          List<Long> order = new ArrayList<>(genSigLookup.keySet());
-          Collections.sort(order);
-          Collections.reverse(order);
-
-          Iterator<Long> iterator = order.iterator();
-          lastBlockWithSameGenSig = null;
-          while(iterator.hasNext() && lastBlockWithSameGenSig == null)
-          {
-            Long nextHeight = iterator.next();
-            if(genSigLookup.get(nextHeight).size() == 1) // only one known genSig for height
-            {
-              // number of domains with same genSig = all domains without N/A
-              if(networkBeans.size() - numberOfNotAvailableDomains == genSigLookup.get(nextHeight).values().iterator().next().size())
-              {
-                lastBlockWithSameGenSig = nextHeight;
-              }
-            }
-          }
-
-          long maxHeight = 0;
-
-          for(NetworkBean networkBean : networkBeans)
-          {
-            if(networkBean.getAvailable())
-            {
-              maxHeight = Math.max(Long.valueOf(networkBean.getHeight()), maxHeight);
-            }
-          }
-
-          boolean appStartedAfterForkHappened = lastBlockWithSameGenSig == null;
-
-          boolean sendMail = false;
-
-          for(NetworkBean networkBean : networkBeans)
-          {
-            if(networkBean.getAvailable())
-            {
-              Long height = Long.valueOf(networkBean.getHeight());
-              Set<String> domainsWithSameGenSigForBlock = genSigLookup.get(height).get(networkBean.getGenerationSignature());
-              if(genSigLookup.get(height).size() > 1 && domainsWithSameGenSigForBlock.size() < (networkBeans.size() - numberOfNotAvailableDomains) / 2)
-              {
-                networkBean.setState(NetworkState.FORKED);
-                sendMail = true;
-              }
-
-              if(height + 4 < maxHeight) // when the wallet is 4 blocks behind -> stuck
-              {
-                if(!networkBean.getState().equals(NetworkState.FORKED)) // if it's forked, then ignore the stuck-check, because forks may also be behind
-                {
-                  networkBean.setState(NetworkState.STUCK);
-
-                  if(ObserverProperties.isEnableStuckNotify()
-                     && (!previousStateLookup.containsKey(networkBean.getDomain())
-                         || !previousStateLookup.get(networkBean.getDomain()).equals(NetworkState.STUCK))) //send only once
-                  {
-                    sendMessage("Burstcoin-Observer - Stuck at block: " + networkBean.getHeight(),
-                                networkBean.getDomain() + "\r\n" + "Please check: " + ObserverProperties.getObserverUrl());
-                  }
-                }
-              }
-            }
-          }
-
-          if(sendMail && !forkMailSend)
-          {
-            if(ObserverProperties.isEnableForkNotify()
-               && (appStartedAfterForkHappened || (lastBlockWithSameGenSigMailSend != null && !lastBlockWithSameGenSig
-              .equals(lastBlockWithSameGenSigMailSend))))
-            {
-              forkMailSend = true;
-              // ensure only one mail send per lastBlockWithSameGenSig e.g. if forked wallet pops off blocks over and over again
-              lastBlockWithSameGenSigMailSend = lastBlockWithSameGenSig;
-
-              sendMessage("Burstcoin-Observer - Fork after block: " + lastBlockWithSameGenSig, "Please check: " + ObserverProperties.getObserverUrl());
-            }
-          }
-          else if(!sendMail && !appStartedAfterForkHappened)
-          {
-            forkMailSend = false;
-          }
-
-          // store the network state for next check-loop 
-          for(NetworkBean networkBean : networkBeans)
-          {
-            if(networkBean.getAvailable() && networkBean.getDomain() != null)
-            {
-              previousStateLookup.put(networkBean.getDomain(), networkBean.getState());
-            }
-          }
-
-          publisher.publishEvent(new NetworkUpdateEvent(networkBeans, lastBlockWithSameGenSig));
-        }
-        catch(Exception e)
-        {
-          LOG.error("Failed receiving Network data.");
         }
       }
-    }, 200, ObserverProperties.getNetworkRefreshInterval());
+    }, 1200, ObserverProperties.getNetworkRefreshInterval());
+  }
+
+  @EventListener
+  public void onMiningInfoEvent(MiningInfoEvent miningInfoEvent)
+  {
+    synchronized(miningInfoLookup)
+    {
+      MiningInfo miningInfo = miningInfoEvent.getMiningInfo();
+      if(miningInfo != null)
+      {
+        miningInfoLookup.put(miningInfoEvent.getNetworkServerUrl(), miningInfo);
+      }
+      else
+      {
+        miningInfoLookup.put(miningInfoEvent.getNetworkServerUrl(), null);
+      }
+      if(ObserverProperties.getNetworkServerUrls().size() == miningInfoLookup.size())
+      {
+        LOG.info("Received MiningInfo from all newtworkServerUrls ...");
+        processMiningInfoLookup(miningInfoLookup);
+        miningInfoLookup.clear();
+      }
+    }
+  }
+
+  private void processMiningInfoLookup(Map<String, MiningInfo> miningInfoLookup)
+  {
+    List<NetworkBean> networkBeans = new ArrayList<>();
+    for(Map.Entry<String, MiningInfo> entry : miningInfoLookup.entrySet())
+    {
+      MiningInfo miningInfo = entry.getValue();
+
+      String https = entry.getKey().contains("https://") ? "Yes" : "No";
+      String domain = entry.getKey().replace("http://", "").replace("https://", "");
+      if(miningInfo != null && miningInfo.getGenerationSignature() != null)
+      {
+        networkBeans.add(new NetworkBean(String.valueOf(miningInfo.getHeight()), domain, entry.getKey(), miningInfo.getBaseTarget(),
+                                         miningInfo.getGenerationSignature().substring(0, 25) + "...",
+                                         String.valueOf(miningInfo.getTargetDeadline()), https));
+      }
+      else
+      {
+        networkBeans.add(new NetworkBean(domain));
+      }
+    }
+
+    Collections.sort(networkBeans, new Comparator<NetworkBean>()
+    {
+      @Override
+      public int compare(NetworkBean o1, NetworkBean o2)
+      {
+        return o1.getBaseTarget().compareTo(o2.getBaseTarget());
+      }
+    });
+    Collections.sort(networkBeans, new Comparator<NetworkBean>()
+    {
+      @Override
+      public int compare(NetworkBean o1, NetworkBean o2)
+      {
+        return o1.getType().compareTo(o2.getType());
+      }
+    });
+    Collections.sort(networkBeans, new Comparator<NetworkBean>()
+    {
+      @Override
+      public int compare(NetworkBean o1, NetworkBean o2)
+      {
+        return o2.getHeight().compareTo(o1.getHeight());
+      }
+    });
+
+    // update genSig Lookup
+    int numberOfNotAvailableDomains = 0;
+    for(NetworkBean networkBean : networkBeans)
+    {
+      if(networkBean.getAvailable())
+      {
+        Long height = Long.valueOf(networkBean.getHeight());
+        if(!genSigLookup.containsKey(height))
+        {
+          genSigLookup.put(height, new HashMap<>());
+        }
+        Map<String, Set<String>> subMap = genSigLookup.get(height);
+        if(!subMap.containsKey(networkBean.getGenerationSignature()))
+        {
+          subMap.put(networkBean.getGenerationSignature(), new HashSet<>());
+        }
+        Set<String> domains = subMap.get(networkBean.getGenerationSignature());
+        domains.add(networkBean.getDomain());
+      }
+      else
+      {
+        // N/A
+        numberOfNotAvailableDomains++;
+      }
+    }
+
+    List<Long> order = new ArrayList<>(genSigLookup.keySet());
+    Collections.sort(order);
+    Collections.reverse(order);
+
+    Iterator<Long> iterator = order.iterator();
+    Long lastBlockWithSameGenSig = null;
+    while(iterator.hasNext() && lastBlockWithSameGenSig == null)
+    {
+      Long nextHeight = iterator.next();
+      if(genSigLookup.get(nextHeight).size() == 1) // only one known genSig for height
+      {
+        // number of domains with same genSig = all domains without N/A
+        if(networkBeans.size() - numberOfNotAvailableDomains == genSigLookup.get(nextHeight).values().iterator().next().size())
+        {
+          lastBlockWithSameGenSig = nextHeight;
+        }
+      }
+    }
+
+    long maxHeight = 0;
+
+    for(NetworkBean networkBean : networkBeans)
+    {
+      if(networkBean.getAvailable())
+      {
+        maxHeight = Math.max(Long.valueOf(networkBean.getHeight()), maxHeight);
+      }
+    }
+
+    boolean appStartedAfterForkHappened = lastBlockWithSameGenSig == null;
+
+    boolean sendMail = false;
+
+    for(NetworkBean networkBean : networkBeans)
+    {
+      if(networkBean.getAvailable())
+      {
+        Long height = Long.valueOf(networkBean.getHeight());
+        Set<String> domainsWithSameGenSigForBlock = genSigLookup.get(height).get(networkBean.getGenerationSignature());
+        if(genSigLookup.get(height).size() > 1 && domainsWithSameGenSigForBlock.size() < (networkBeans.size() - numberOfNotAvailableDomains) / 2)
+        {
+          networkBean.setState(NetworkState.FORKED);
+          sendMail = true;
+        }
+
+        if(height + 4 < maxHeight) // when the wallet is 4 blocks behind -> stuck
+        {
+          if(!networkBean.getState().equals(NetworkState.FORKED)) // if it's forked, then ignore the stuck-check, because forks may also be behind
+          {
+            networkBean.setState(NetworkState.STUCK);
+
+            if(ObserverProperties.isEnableStuckNotify()
+               && (!previousStateLookup.containsKey(networkBean.getDomain())
+                   || !previousStateLookup.get(networkBean.getDomain()).equals(NetworkState.STUCK))) //send only once
+            {
+              sendMessage("Burstcoin-Observer - Stuck at block: " + networkBean.getHeight(),
+                          networkBean.getDomain() + "\r\n" + "Please check: " + ObserverProperties.getObserverUrl());
+            }
+          }
+        }
+      }
+    }
+
+    if(sendMail && !forkMailSend)
+    {
+      if(ObserverProperties.isEnableForkNotify()
+         && (appStartedAfterForkHappened || (lastBlockWithSameGenSigMailSend != null && !lastBlockWithSameGenSig
+        .equals(lastBlockWithSameGenSigMailSend))))
+      {
+        forkMailSend = true;
+        // ensure only one mail send per lastBlockWithSameGenSig e.g. if forked wallet pops off blocks over and over again
+        lastBlockWithSameGenSigMailSend = lastBlockWithSameGenSig;
+
+        sendMessage("Burstcoin-Observer - Fork after block: " + lastBlockWithSameGenSig, "Please check: " + ObserverProperties.getObserverUrl());
+      }
+    }
+    else if(!sendMail && !appStartedAfterForkHappened)
+    {
+      forkMailSend = false;
+    }
+
+    // store the network state for next check-loop
+    for(NetworkBean networkBean : networkBeans)
+    {
+      if(networkBean.getAvailable() && networkBean.getDomain() != null)
+      {
+        previousStateLookup.put(networkBean.getDomain(), networkBean.getState());
+      }
+    }
+
+    publisher.publishEvent(new NetworkUpdateEvent(networkBeans, lastBlockWithSameGenSig));
   }
 
   private void sendMessage(String subject, String message)
@@ -297,52 +312,5 @@ public class NetworkService
     mailMessage.setSubject(subject);
     mailMessage.setText(message);
     mailSender.send(mailMessage);
-  }
-
-  private MiningInfo getMiningInfo(String server)
-  {
-    MiningInfo result = null;
-    try
-    {
-      ContentResponse response;
-      response = httpClient.newRequest(server + "/burst?requestType=getMiningInfo")
-        .timeout(ObserverProperties.getConnectionTimeout(), TimeUnit.MILLISECONDS)
-        .send();
-
-      result = objectMapper.readValue(response.getContentAsString(), MiningInfo.class);
-    }
-    catch(TimeoutException timeoutException)
-    {
-      LOG.warn("Unable to get mining info caused by connectionTimeout, currently '" + (ObserverProperties.getConnectionTimeout() / 1000)
-               + " sec.' try increasing it!");
-    }
-    catch(Exception e)
-    {
-      LOG.trace("Unable to get mining info from wallet (maybe devV2): " + e.getMessage());
-    }
-
-    if(result == null)
-    {
-      try
-      {
-        // maybe server is dev v2 pool api
-        ContentResponse response = httpClient.newRequest(server + "/pool/getMiningInfo")
-          .timeout(ObserverProperties.getConnectionTimeout(), TimeUnit.MILLISECONDS)
-          .send();
-
-        result = objectMapper.readValue(response.getContentAsString(), MiningInfo.class);
-      }
-      catch(TimeoutException timeoutException)
-      {
-        LOG.warn("Unable to get mining info caused by connectionTimeout, currently '" + (ObserverProperties.getConnectionTimeout() / 1000)
-                 + " sec.' try increasing it!");
-      }
-      catch(Exception e)
-      {
-        LOG.info("Unable to get mining info from wallet for '" + server + "'");
-      }
-    }
-
-    return result;
   }
 }

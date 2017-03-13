@@ -29,9 +29,11 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpProxy;
 import org.eclipse.jetty.client.Socks4Proxy;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -62,8 +64,35 @@ public class Observer
     };
   }
 
+  @Bean(name = "networkTaskExecutor")
+  public SimpleAsyncTaskExecutor roundPool()
+  {
+    SimpleAsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
+//    int size = ObserverProperties.getNetworkServerUrls().size();
+//    LOG.info("Init Network TaskExecutor with " + size +" threads.");
+//    taskExecutor.setCorePoolSize(size);
+//    taskExecutor.setMaxPoolSize(size);
+    return taskExecutor;
+  }
+
   @Bean
   public HttpClient httpClient()
+  {
+    HttpClient client = new HttpClient(new SslContextFactory(true));
+    try
+    {
+      client.start();
+    }
+    catch(Exception e)
+    {
+      e.printStackTrace();
+    }
+    return client;
+  }
+
+  @Bean
+  @Qualifier("ProxyHttpClient")
+  public HttpClient proxyHttpClient()
   {
     HttpClient client = new HttpClient(new SslContextFactory(true));
 

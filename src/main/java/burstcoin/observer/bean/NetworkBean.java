@@ -61,6 +61,10 @@ public class NetworkBean
 
     // week impl. wallet with pool in domain will show up as pool
     this.type = targetDeadline.equals("0") ? domain.contains("faucet") ? "Faucet" : domain.contains("pool") ? "Pool" : "Wallet" : "Pool";
+    if(domain.contains("neon"))
+    {
+      this.type = "Pool";
+    }
     this.targetDeadline = targetDeadline.equals("0") ? "Pool".equals(type) ? "Unlimited" : "N/A" : targetDeadline;
   }
 

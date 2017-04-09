@@ -32,12 +32,19 @@ public class NetworkUpdateEvent
   private Date lastUpdate;
   private List<NetworkBean> networkBeans;
   private Long lastBlockWithSameGenSig;
+  private List<List> multiSenkeyData;
 
-  public NetworkUpdateEvent(List<NetworkBean> networkBeans, Long lastBlockWithSameGenSig)
+  public NetworkUpdateEvent(List<NetworkBean> networkBeans, Long lastBlockWithSameGenSig, List<List> multiSenkeyData)
   {
     this.lastBlockWithSameGenSig = lastBlockWithSameGenSig;
+    this.multiSenkeyData = multiSenkeyData;
     this.lastUpdate = new Date();
     this.networkBeans = networkBeans;
+  }
+
+  public List<List> getMultiSenkeyData()
+  {
+    return multiSenkeyData;
   }
 
   public Date getLastUpdate()

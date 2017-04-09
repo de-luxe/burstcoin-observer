@@ -3,6 +3,7 @@ package burstcoin.observer.service;
 
 import burstcoin.observer.ObserverProperties;
 import burstcoin.observer.bean.AssetBean;
+import burstcoin.observer.bean.AssetCandleStickBean;
 import burstcoin.observer.event.AssetUpdateEvent;
 import burstcoin.observer.service.model.State;
 import burstcoin.observer.service.model.asset.Asset;
@@ -29,6 +30,7 @@ import javax.annotation.PostConstruct;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -80,8 +82,10 @@ public class AssetService
           LOG.info("FINISH import asset data!");
 
           List<AssetBean> assetBeans = new ArrayList<>();
+          List<AssetCandleStickBean> assetCandleStickBeans = new ArrayList<>();
           for(Asset asset : assetLookup.values())
           {
+            List<List> candleStickData = new ArrayList<List>();
             long volume7Days = 0L;
             long volume30Days = 0L;
             String lastPrice = "";
@@ -115,18 +119,70 @@ public class AssetService
                   }
                 }
               }
+
+              Long currentBlockHeight = Long.valueOf(state.getNumberOfBlocks());
+
+              for(int i = 1; i <= 60 /*days*/; i++)
+              {
+                List<Trade> tradesOfDay = new ArrayList<Trade>();
+                for(Trade trade : trades)
+                {
+                  if(trade.getHeight() > currentBlockHeight - (360 * (i + 1)) && trade.getHeight() < currentBlockHeight - (360 * i))
+                  {
+                    tradesOfDay.add(trade);
+                  }
+                }
+
+                Double min = null;
+                Double max = null;
+                Double first = null;
+                Double last = null;
+
+                for(Trade trade : tradesOfDay)
+                {
+                  double price = Double.valueOf(convertPrice(trade.getPriceNQT(), trade.getDecimals()));
+                  if(first == null)
+                  {
+                    first = price;
+                  }
+                  if(min == null || price < min)
+                  {
+                    min = price;
+                  }
+                  if(max == null || price > max)
+                  {
+                    max = price;
+                  }
+                  if(tradesOfDay.indexOf(trade) == tradesOfDay.size() - 1)
+                  {
+                    last = price;
+                  }
+                }
+
+                if(min != null && max != null && first != null && last != null)
+                {
+                  List x = Arrays.asList("" + i, min, first, last, max);
+                  candleStickData.add(x);
+                }
+                else
+                {
+                  candleStickData.add(Arrays.asList("" + i, null, null, null, null));
+                }
+              }
             }
+
+            Collections.reverse(candleStickData);
 
             List<Order> sellOrders = orderLookup.get(OrderType.ASK).get(asset) != null ? orderLookup.get(OrderType.ASK).get(asset) : new ArrayList<>();
             List<Order> buyOrders = orderLookup.get(OrderType.BID).get(asset) != null ? orderLookup.get(OrderType.BID).get(asset) : new ArrayList<>();
 
             if(!(buyOrders.isEmpty() && sellOrders.isEmpty() && asset.getNumberOfTrades() < 2))
             {
-
               assetBeans.add(new AssetBean(asset.getAsset(), asset.getName(), asset.getDescription(), asset.getAccountRS(), asset.getAccount(),
                                            asset.getQuantityQNT(), asset.getDecimals(), asset.getNumberOfAccounts(), asset.getNumberOfTransfers(),
                                            asset.getNumberOfTrades(), buyOrders.size(), sellOrders.size(),
                                            formatAmountNQT(volume7Days, 8), formatAmountNQT(volume30Days, 8), lastPrice));
+              assetCandleStickBeans.add(new AssetCandleStickBean(asset.getAsset(), candleStickData));
             }
           }
           Collections.sort(assetBeans, new Comparator<AssetBean>()
@@ -146,7 +202,22 @@ public class AssetService
             }
           });
 
-          publisher.publishEvent(new AssetUpdateEvent(assetBeans));
+          // delete data of candleStick for all after index 24 todo remove as soon ui has show/hide charts per asset
+          List<String> assetOrder = new ArrayList<String>();
+          for(AssetBean assetBean : assetBeans)
+          {
+            assetOrder.add(assetBean.getAsset());
+          }
+          assetCandleStickBeans.sort(new Comparator<AssetCandleStickBean>()
+          {
+            @Override
+            public int compare(AssetCandleStickBean o1, AssetCandleStickBean o2)
+            {
+              return ((Integer)assetOrder.indexOf(o1.getAsset())).compareTo(assetOrder.indexOf(o2.getAsset()));
+            }
+          });
+
+          publisher.publishEvent(new AssetUpdateEvent(assetBeans, assetCandleStickBeans));
         }
         catch(Exception e)
         {

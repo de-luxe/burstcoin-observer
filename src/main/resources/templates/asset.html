@@ -9,6 +9,55 @@
         <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/style.css}"/>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script type="text/javascript" th:inline="javascript">
+            /*<![CDATA[*/
+            google.charts.load("current", {packages: ["corechart"]});
+
+            /*[+
+             var assetCandleStickBeans = [[${assetCandleStickBeans}]];
+             +]*/
+
+            function showChart(id)
+            {
+                document.getElementById(id).style.display = 'none';
+
+                for(i = 0; i < assetCandleStickBeans.length; i++)
+                {
+                    var candlestickBean = assetCandleStickBeans[i];
+                    if(candlestickBean.asset+"x" == id)
+                    {
+                        drawChart(candlestickBean);
+                    }
+                }
+            }
+
+            function drawChart(assetCandleStickBean)
+            {
+                if(assetCandleStickBean.candleStickData != null)
+                {
+                    var data = google.visualization.arrayToDataTable(assetCandleStickBean.candleStickData, true);
+                    var options = {
+                        legend: 'none',
+                        backgroundColor: {fill: 'transparent', strokeWidth: 0},
+                        chartArea: {left: 70, top: 10, width: '100%', height: '260px'},
+                        candlestick: {
+                            fallingColor: {strokeWidth: 0, fill: '#a52714'}, // red
+                            risingColor: {strokeWidth: 0, fill: '#0f9d58'}   // green
+                        },
+                        hAxis: {title: 'Days ago (360 blocks per day / 24h)', titleTextStyle: {color: '#000000'}, showTextEvery: 2},
+                        vAxis: {title: 'Price in BURST', titleTextStyle: {color: '#000000'}}
+
+                    };
+                    var chart = new google.visualization.CandlestickChart(document.getElementById(assetCandleStickBean.asset));
+                    chart.draw(data, options);
+                }
+            }
+
+            /*]]>*/
+        </script>
+
     </head>
 
     <body>
@@ -19,7 +68,8 @@
             <div class="jumbotron">
                 <h1 class="display-3">Burstcoin Assets</h1>
 
-                <p class="lead">This page updates every <span th:text="${interval / 60}"></span> minutes (Data updated <span th:text="${lastUpdate / 60}"></span> minutes ago.) and shows the Burstcoin Assets.</p>
+                <p class="lead">This page updates every <span th:text="${interval / 60}"></span> minutes (Data updated <span
+                        th:text="${lastUpdate / 60}"></span> minutes ago.) and shows the Burstcoin Assets.</p>
                 <table class="table table-hover table-striped">
                     <thead>
                         <tr>
@@ -60,7 +110,15 @@
                                 <td th:text="${#numbers.formatInteger(assetBean.volume30Days,0,'DEFAULT')}"></td>
                             </tr>
                             <tr>
-                                <td th:text="${assetBean.description}" colspan="9"></td>
+                                <td th:text="${assetBean.description}" colspan="8"></td>
+                                <td colspan="1" style="vertical-align: bottom;">
+                                    <span th:id="${assetBean.asset} + 'x'" class="btn btn-secondary" role="button" onclick="showChart(this.id)">Show chart</span>
+                                </td>
+                            </tr>
+                            <tr>
+                            </tr>
+                            <tr>
+                                <td th:id="${assetBean.asset}" colspan="9"></td>
                             </tr>
                         </div>
                     </tbody>

@@ -11,6 +11,53 @@
 
         <meta http-equiv="refresh" th:content="${refreshContent}"/>
         <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/style.css}"/>
+
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script type="text/javascript" th:inline="javascript">
+            /*<![CDATA[*/
+            google.charts.load("current", {packages:["sankey"]});
+            google.charts.setOnLoadCallback(drawChart);
+
+            /*[+
+            var chartData = [[${multiSenkeyData}]];
+            +]*/
+
+            function drawChart() {
+                var data = new google.visualization.DataTable();
+                data.addColumn('string', 'From');
+                data.addColumn('string', 'To');
+                data.addColumn('number', 'Nodes');
+                data.addColumn({'type':'string','role':'tooltip'});
+                /*[+
+                data.addRows(chartData);
+                +]*/
+
+                // Set chart options
+                var colors = ['#DCDCDC','#D3D3D3','#C0C0C0','#B0B0B0','#A9A9A9','#989898','#808080','#707070','#686868','#585858','#484848','#383838'];
+
+                var chartWidth = (chartData.size * 50) + "px";
+                var options = {
+                    chartArea:{left:0,top:0,width: chartWidth ,height:'200px'},
+                    width: chartWidth,
+                    sankey: {
+                        node: {
+                            colors: colors
+                        },
+                        link: {
+                            colorMode: 'gradient',
+                            colors: colors
+                        }
+                    }
+                };
+
+                var chart = new google.visualization.Sankey(document.getElementById('sankey_multiple'));
+                chart.draw(data, options);
+            }
+
+
+
+            /*]]>*/
+        </script>
     </head>
 
     <body>
@@ -30,7 +77,7 @@
                 <table class="table table-hover table-striped">
                     <thead>
                         <tr>
-                            <th>Next Block</th>
+                            <th>NextBlock</th>
                             <th>BaseTarget</th>
                             <th>Type</th>
                             <th>Domain</th>
@@ -45,7 +92,9 @@
                             <td th:text="${networkBean.baseTarget}"></td>
                             <td th:text="${networkBean.type}"></td>
                             <td >
-                                <span th:text="${networkBean.https=='Yes' ? '&#x1f512;' : '&#x1f513;'}"></span>
+                                <img style='margin-bottom:4px;' th:src="${networkBean.https=='Yes'
+                                ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAAVFBMVEUAAABwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHAGi9GbAAAAG3RSTlMAAQIFBhYYGR0gIjQ4QkNJUVZkZoyXqKra+/1tSMJSAAAAVElEQVQYV5XItw3AMAwAQVLOOcfff083MkBDhaErTyRG3XXVdzaA1U7JrLpQmBpQEaU3NSEiwhhZeuFd6ssBHDuAs5UmQbVNUHkW1Hna0hvvfuvfAy6cCXYCVu/LAAAAAElFTkSuQmCC'
+                                : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAAXVBMVEUAAABwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHA6qUy8AAAAHnRSTlMAAQIFBg4TFBogITE2QEJDR1FkdYORprTZ3PP1+/1iKxOTAAAAXklEQVQYV5XJSRKCQBAF0V+oYKMMCo5g3v+YbDqIanphkMuX0o5C29apjAAPLyWD2Z2zoytHyegcNRSSuDmSKSNt6UtstnUDrydA4el0yKi/ZBSqjD7vhCZiv5X+twBiaAn1zQbYOQAAAABJRU5ErkJggg=='}" />
                                 <a data-toggle="tooltip" data-placement="right" th:href="${networkBean.url}" th:text="${networkBean.domain}"
                                    th:title="${networkBean.url}" target="_blank" class="btn-link" style="color: black;">
                                 </a>
@@ -60,6 +109,15 @@
                 <p class="lead">
                     This list does not contain all nodes of Burstcoin network, only a manual configured subset.
                 </p>
+
+                <div style="width: 100%; height: 230px; overflow-x: scroll; overflow-y: visible">
+                    <div id="sankey_multiple"></div>
+                </div>
+
+                <p class="lead">
+                    The above chart shows the block transitions of nodes, weight by amount of nodes. This is a experimental feature.
+                </p>
+
             </div>
         </div>
     </body>

@@ -24,6 +24,7 @@ package burstcoin.observer.controller;
 
 import burstcoin.observer.ObserverProperties;
 import burstcoin.observer.bean.AssetBean;
+import burstcoin.observer.bean.AssetCandleStickBean;
 import burstcoin.observer.bean.NavigationPoint;
 import burstcoin.observer.event.AssetUpdateEvent;
 import org.springframework.context.event.EventListener;
@@ -45,6 +46,7 @@ public class AssetController
 {
   private List<AssetBean> assetBeans;
   private Date lastUpdate;
+  private List<AssetCandleStickBean> assetCandleStickBeans;
 
   @PostConstruct
   public void init()
@@ -56,6 +58,7 @@ public class AssetController
   @EventListener
   public void handleMessage(AssetUpdateEvent event)
   {
+    assetCandleStickBeans = event.getAssetCandleStickBeans();
     assetBeans = event.getAssetBeans();
     lastUpdate = event.getLastUpdate();
   }
@@ -71,6 +74,10 @@ public class AssetController
     if(assetBeans != null)
     {
       model.addAttribute("assetBeans", assetBeans);
+    }
+    if(assetCandleStickBeans != null)
+    {
+      model.addAttribute("assetCandleStickBeans", assetCandleStickBeans);
     }
 
     return "asset";

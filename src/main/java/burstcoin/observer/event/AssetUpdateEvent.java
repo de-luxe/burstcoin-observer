@@ -24,6 +24,7 @@ package burstcoin.observer.event;
 
 
 import burstcoin.observer.bean.AssetBean;
+import burstcoin.observer.bean.AssetCandleStickBean;
 
 import java.util.Date;
 import java.util.List;
@@ -32,11 +33,18 @@ public class AssetUpdateEvent
 {
   private Date lastUpdate;
   private List<AssetBean> assetBeans;
+  private List<AssetCandleStickBean> assetCandleStickBeans;
 
-  public AssetUpdateEvent(List<AssetBean> assetBeans)
+  public AssetUpdateEvent(List<AssetBean> assetBeans, List<AssetCandleStickBean> assetCandleStickBeans)
   {
     this.assetBeans = assetBeans;
+    this.assetCandleStickBeans = assetCandleStickBeans;
     lastUpdate = new Date();
+  }
+
+  public List<AssetCandleStickBean> getAssetCandleStickBeans()
+  {
+    return assetCandleStickBeans;
   }
 
   public Date getLastUpdate()

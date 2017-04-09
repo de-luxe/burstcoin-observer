@@ -68,10 +68,6 @@ public class Observer
   public SimpleAsyncTaskExecutor roundPool()
   {
     SimpleAsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
-//    int size = ObserverProperties.getNetworkServerUrls().size();
-//    LOG.info("Init Network TaskExecutor with " + size +" threads.");
-//    taskExecutor.setCorePoolSize(size);
-//    taskExecutor.setMaxPoolSize(size);
     return taskExecutor;
   }
 
@@ -79,6 +75,7 @@ public class Observer
   public HttpClient httpClient()
   {
     HttpClient client = new HttpClient(new SslContextFactory(true));
+    client.setFollowRedirects(true);
     try
     {
       client.start();

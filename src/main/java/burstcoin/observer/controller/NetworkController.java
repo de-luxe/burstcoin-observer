@@ -46,6 +46,7 @@ public class NetworkController
   private List<NetworkBean> networkBeans;
   private Long lastBlockWithSameGenSig;
   private Date lastUpdate;
+  private List<List> multiSenkeyData;
 
   @PostConstruct
   public void init()
@@ -61,6 +62,7 @@ public class NetworkController
     networkBeans = event.getNetworkBeans();
     lastBlockWithSameGenSig = event.getLastBlockWithSameGenSig();
     lastUpdate = event.getLastUpdate();
+    multiSenkeyData = event.getMultiSenkeyData();
   }
 
   @RequestMapping({"/", "/network"})
@@ -75,6 +77,7 @@ public class NetworkController
     {
       model.addAttribute("networkBeans", networkBeans);
     }
+    model.addAttribute("multiSenkeyData", multiSenkeyData);
     model.addAttribute("lastBlockWithSameGenSig", "Last block with same GenerationSignature: " + lastBlockWithSameGenSig);
 
     return "network";

@@ -43,8 +43,10 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -81,6 +83,8 @@ public class NetworkService
 
   private static final Map<String, MiningInfo> miningInfoLookup = new HashMap<>();
 
+  private Date lastUpdate = new Date();
+
   @PostConstruct
   private void postConstruct()
   {
@@ -96,10 +100,12 @@ public class NetworkService
       public void run()
       {
         // only start if previous is finished
-        if(miningInfoLookup.isEmpty())
+        if(miningInfoLookup.isEmpty() || new Date().getTime() - (5 * 60 * 1000) > lastUpdate.getTime())
         {
+          miningInfoLookup.clear();
           try
           {
+            lastUpdate = new Date();
             for(String networkServerUrl : ObserverProperties.getNetworkServerUrls())
             {
               GetMiningInfoTask getMiningInfoTask = beanFactory.getBean(GetMiningInfoTask.class, networkServerUrl);
@@ -300,7 +306,144 @@ public class NetworkService
       }
     }
 
-    publisher.publishEvent(new NetworkUpdateEvent(networkBeans, lastBlockWithSameGenSig));
+    publisher.publishEvent(new NetworkUpdateEvent(networkBeans, lastBlockWithSameGenSig, createSenkeyChartData()));
+  }
+
+  // create multi senkey chart data
+  private List<List> createSenkeyChartData()
+  {
+    List<List> multiSenkeyData = new ArrayList<>();
+    int numberOfBlocks = 11;
+    List<Long> orderedHeight = new ArrayList<>(genSigLookup.keySet());
+    Collections.sort(orderedHeight);
+    List<Long> heightSub = orderedHeight.subList((orderedHeight.size() > numberOfBlocks ? orderedHeight.size() - numberOfBlocks : 0), orderedHeight.size());
+
+    Map<String, Long> sourcePerGenSigLookup = new HashMap<>();
+    Map<Long, Map<String, String>> remainingSourcesWithoutTarget = new HashMap<>();
+    for(Long source : heightSub)
+    {
+      remainingSourcesWithoutTarget.put(source, new HashMap<>());
+
+      if(heightSub.indexOf(source) < heightSub.size() - 1)
+      {
+        Long target = heightSub.get(heightSub.indexOf(source) + 1);
+        Map<String, Set<String>> sourceGenSigDomainLookup = genSigLookup.get(source);
+        // domain -> gensig
+        Map<String, String> sourceMapping = new HashMap<>();
+
+        for(Map.Entry<String, Set<String>> sourceEntry : sourceGenSigDomainLookup.entrySet())
+        {
+          for(String domain : sourceEntry.getValue())
+          {
+            sourceMapping.put(domain, sourceEntry.getKey());
+          }
+        }
+
+        Map<String, Set<String>> targetGenSigDomainLookup = genSigLookup.get(target);
+        // domain -> gensig
+        Map<String, String> targetMapping = new HashMap<>();
+        for(Map.Entry<String, Set<String>> targetEntry : targetGenSigDomainLookup.entrySet())
+        {
+          for(String domain : targetEntry.getValue())
+          {
+            targetMapping.put(domain, targetEntry.getKey());
+          }
+        }
+
+        // sourceGenSig -> targetGensig -> domains
+        Map<String, Map<String, List<String>>> fromToCounter = new HashMap<>();
+
+
+        // domain ->genSig
+        for(Map.Entry<String, String> entry : sourceMapping.entrySet())
+        {
+          String domain = entry.getKey();
+          String sourceGenSig = entry.getValue();
+          String targetGenSig = targetMapping.get(domain);
+
+          // remember source block height by genSig
+          sourcePerGenSigLookup.put(sourceGenSig, source);
+
+          // skip if from/to is not available
+          if(targetGenSig != null)
+          {
+            if(!fromToCounter.containsKey(sourceGenSig))
+            {
+              fromToCounter.put(sourceGenSig, new HashMap<>());
+            }
+            if(!fromToCounter.get(sourceGenSig).containsKey(targetGenSig))
+            {
+              fromToCounter.get(sourceGenSig).put(targetGenSig, new ArrayList<>());
+            }
+            fromToCounter.get(sourceGenSig).get(targetGenSig).add(domain);
+          }
+          else
+          {
+            // no target found
+            remainingSourcesWithoutTarget.get(source).put(entry.getKey(), entry.getValue());
+          }
+        }
+
+        // check if we have a target for previous sources without target now
+        List<Long> previousSources = new ArrayList<>(remainingSourcesWithoutTarget.keySet());
+        // ignore current source
+        if(previousSources.contains(source))
+        {
+          previousSources.remove(source);
+        }
+        Collections.sort(previousSources);
+        for(Long previousSource : previousSources)
+        {
+          Iterator<Map.Entry<String, String>> iter = remainingSourcesWithoutTarget.get(previousSource).entrySet().iterator();
+
+          while(iter.hasNext())
+          {
+            Map.Entry<String, String> entry = iter.next();
+            String domain = entry.getKey();
+            String sourceGenSig = entry.getValue();
+            String targetGenSig = targetMapping.get(domain);
+
+            // skip if from/to is not available
+            if(targetGenSig != null)
+            {
+              if(!fromToCounter.containsKey(sourceGenSig))
+              {
+                fromToCounter.put(sourceGenSig, new HashMap<>());
+              }
+              if(!fromToCounter.get(sourceGenSig).containsKey(targetGenSig))
+              {
+                fromToCounter.get(sourceGenSig).put(targetGenSig, new ArrayList<>());
+              }
+              fromToCounter.get(sourceGenSig).get(targetGenSig).add(domain);
+
+              iter.remove();
+            }
+          }
+
+          if(remainingSourcesWithoutTarget.get(previousSource).isEmpty())
+          {
+            remainingSourcesWithoutTarget.remove(previousSource);
+          }
+        }
+
+        for(String sourceGenSig : fromToCounter.keySet())
+        {
+          for(Map.Entry<String, List<String>> entry : fromToCounter.get(sourceGenSig).entrySet())
+          {
+            Long currentSource = sourcePerGenSigLookup.get(sourceGenSig);
+            String sourceName = currentSource + " [" + sourceGenSig.substring(0, 4) + "..]";
+            String targetName = target + " [" + entry.getKey().substring(0, 4) + "..]";
+
+            String tooltip = entry.getValue().size() + " nodes,"
+                             + " from " + currentSource + " [" + sourceGenSig.substring(0, 6) + "..],"
+                             + " to " + target + " [" + entry.getKey().substring(0, 6) + "..]";
+
+            multiSenkeyData.add(Arrays.asList(sourceName, targetName, entry.getValue().size(), tooltip));
+          }
+        }
+      }
+    }
+    return multiSenkeyData;
   }
 
   private void sendMessage(String subject, String message)

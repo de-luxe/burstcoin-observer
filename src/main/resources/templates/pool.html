@@ -9,6 +9,53 @@
         <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/style.css}"/>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            google.charts.load("current", {packages: ["corechart"]});
+            google.charts.setOnLoadCallback(drawChart);
+            function drawChart()
+            {
+                /*[+
+                 var data  = [[${chartData}]];
+                 +]*/
+                var data = google.visualization.arrayToDataTable(data);
+
+                /*[+
+                 var data2  = [[${chartData2}]];
+                 +]*/
+                var data2 = google.visualization.arrayToDataTable(data2);
+
+                var options = {
+                    title: 'Blocks mined:',
+                    pieHole: 0.4,
+                    colors:['#DCDCDC','#D3D3D3','#C0C0C0','#B0B0B0','#A9A9A9','#989898','#808080','#707070','#686868','#585858','#484848','#383838'],
+                    backgroundColor:'#eceeef',
+                    is3D: true,
+                    tooltip:{trigger: 'selection'},
+                    chartArea:{left:10,top:20,width:'100%',height:'100%'}
+                };
+
+                var options2 = {
+                    title: 'Blockfinder:',
+                    pieHole: 0.4,
+                    colors:['#DCDCDC','#D3D3D3','#C0C0C0','#B0B0B0','#A9A9A9','#989898','#808080','#707070','#686868','#585858','#484848','#383838'],
+                    backgroundColor:'#eceeef',
+                    is3D: true,
+                    tooltip:{trigger: 'selection'},
+                    chartArea:{left:10,top:20,width:'100%',height:'100%'}
+                };
+
+                var chart2 = new google.visualization.PieChart(document.getElementById('donutchart2'));
+                chart2.draw(data2, options2);
+
+                var chart = new google.visualization.PieChart(document.getElementById('donutchart'));
+                chart.draw(data, options);
+            }
+            /*]]>*/
+        </script>
+
     </head>
 
     <body>
@@ -21,6 +68,8 @@
 
                 <p class="lead">This page updates every <span th:text="${interval / 60}"></span> minutes. (Data updated <span th:text="${lastUpdate / 60}"></span> minutes ago.)<br/>It shows the Burstcoin Pool-Situation over the last 10
                     days (3600 Blocks).</p>
+                <div id="donutchart2" style="float: left; height: 280px; width: 48%;"></div>
+                <div id="donutchart" style="float: right; height: 280px; width: 48%;"></div>
 
                 <table class="table table-hover table-striped">
                     <thead>
@@ -50,8 +99,10 @@
                         </tr>
                     </tbody>
                 </table>
+
                 <p class="lead">The stats are not 100% correct.<br/>All found blocks of a miner, within the 10 days period, are counted for the pool a miner is
                     currently assigned to.</p>
+
             </div>
         </div>
 

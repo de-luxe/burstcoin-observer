@@ -22,9 +22,11 @@
 package burstcoin.observer.controller;
 
 import burstcoin.observer.ObserverProperties;
-import burstcoin.observer.event.PoolUpdateEvent;
-import burstcoin.observer.bean.PoolBean;
 import burstcoin.observer.bean.NavigationPoint;
+import burstcoin.observer.bean.PoolBean;
+import burstcoin.observer.event.PoolUpdateEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.stereotype.Controller;
@@ -35,6 +37,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -42,6 +47,9 @@ import java.util.List;
 public class PoolController
   extends BaseController
 {
+  @Autowired
+  private ObjectMapper objectMapper;
+
   private List<PoolBean> poolBeans;
   private Date lastUpdate;
 
@@ -70,6 +78,58 @@ public class PoolController
     if(poolBeans != null)
     {
       model.addAttribute("poolBeans", poolBeans);
+
+      List l = new ArrayList();
+      l.add(Arrays.asList("Pool", "Blocks"));
+      for(int i = 0; i < 10; i++)
+      {
+        PoolBean poolBean = poolBeans.get(i);
+        l.add(Arrays.asList(poolBean.getName(), poolBean.getFoundBlocks()));
+      }
+
+      if(poolBeans.size() > 9)
+      {
+        int others = 0;
+        for(int i = 10; i < poolBeans.size(); i++)
+        {
+          PoolBean poolBean = poolBeans.get(i);
+          others += poolBean.getFoundBlocks();
+        }
+        l.add(Arrays.asList("Others", others));
+      }
+
+
+      List<PoolBean> poolBeansOrderedBySuccessMiners = new ArrayList<>(poolBeans);
+      Collections.sort(poolBeansOrderedBySuccessMiners, new Comparator<PoolBean>()
+      {
+        @Override
+        public int compare(PoolBean o1, PoolBean o2)
+        {
+          return ((Integer) o2.getSuccessfulMiners()).compareTo(o1.getSuccessfulMiners());
+        }
+      });
+      List l2 = new ArrayList();
+      l2.add(Arrays.asList("Pool", "Miners"));
+
+      for(int i = 0; i < 10; i++)
+      {
+        PoolBean poolBean = poolBeansOrderedBySuccessMiners.get(i);
+        l2.add(Arrays.asList(poolBean.getName(), poolBean.getSuccessfulMiners()));
+      }
+
+      if(poolBeansOrderedBySuccessMiners.size() > 9)
+      {
+        int others2 = 0;
+        for(int i = 10; i < poolBeansOrderedBySuccessMiners.size(); i++)
+        {
+          PoolBean poolBean = poolBeansOrderedBySuccessMiners.get(i);
+          others2 += poolBean.getSuccessfulMiners();
+        }
+        l2.add(Arrays.asList("Others", others2));
+      }
+
+      model.addAttribute("chartData", l);
+      model.addAttribute("chartData2", l2);
     }
     return "pool";
   }

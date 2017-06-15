@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 by luxe - https://github.com/de-luxe - BURST-LUXE-RED2-G6JW-H4HG5
+ * Copyright (c) 2017 by luxe - https://github.com/de-luxe - BURST-LUXE-RED2-G6JW-H4HG5
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -39,11 +39,14 @@ public class BaseController
     List<NavigationPoint> left = new ArrayList<>();
     left.add(NavigationPoint.NETWORK);
     left.add(NavigationPoint.POOL);
+    left.add(NavigationPoint.NODE);
     left.add(NavigationPoint.ASSET);
     left.add(NavigationPoint.CROWDFUND);
 
     List<NavigationPoint> right = new ArrayList<>();
     right.add(NavigationPoint.API);
+    right.add(NavigationPoint.FORUM);
+    right.add(NavigationPoint.BLOCKEX);
     right.add(NavigationPoint.GITHUB);
     Collections.reverse(right);
 

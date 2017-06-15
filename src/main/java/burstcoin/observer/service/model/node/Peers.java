@@ -20,33 +20,19 @@
  *
  */
 
-package burstcoin.observer.event;
+package burstcoin.observer.service.model.node;
 
+import burstcoin.observer.service.model.IsResponse;
 
-import burstcoin.observer.bean.PoolBean;
-
-import java.util.Date;
 import java.util.List;
 
-public class PoolUpdateEvent
+public class Peers
+  extends IsResponse
 {
-  private List<PoolBean> poolBeans;
-  private Date lastUpdate;
+  protected List<String> peers;
 
-  public PoolUpdateEvent(List<PoolBean> poolBeans)
+  public List<String> getPeers()
   {
-    lastUpdate = new Date();
-
-    this.poolBeans = poolBeans;
-  }
-
-  public List<PoolBean> getPoolBeans()
-  {
-    return poolBeans;
-  }
-
-  public Date getLastUpdate()
-  {
-    return lastUpdate;
+    return peers;
   }
 }

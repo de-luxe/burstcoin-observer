@@ -22,27 +22,49 @@
 
 package burstcoin.observer.event;
 
-
-import burstcoin.observer.bean.PoolBean;
+import burstcoin.observer.bean.NodeListBean;
+import burstcoin.observer.bean.NodeStats;
 
 import java.util.Date;
 import java.util.List;
 
-public class PoolUpdateEvent
+
+public class NodeUpdateEvent
 {
-  private List<PoolBean> poolBeans;
+  private List<NodeListBean> nodes;
+  private NodeStats nodeStats;
+  private List<List> geoData;
+  private List<List> mapData;
   private Date lastUpdate;
 
-  public PoolUpdateEvent(List<PoolBean> poolBeans)
+  public NodeUpdateEvent(List<NodeListBean> nodes, NodeStats nodeStats,List<List> geoData, List<List> mapData)
   {
-    lastUpdate = new Date();
+    this.nodes = nodes;
+    this.nodeStats = nodeStats;
+    this.geoData = geoData;
+    this.mapData = mapData;
 
-    this.poolBeans = poolBeans;
+    lastUpdate = new Date();
   }
 
-  public List<PoolBean> getPoolBeans()
+  public List<List> getMapData()
   {
-    return poolBeans;
+    return mapData;
+  }
+
+  public NodeStats getNodeStats()
+  {
+    return nodeStats;
+  }
+
+  public List<List> getGeoData()
+  {
+    return geoData;
+  }
+
+  public List<NodeListBean> getNodes()
+  {
+    return nodes;
   }
 
   public Date getLastUpdate()

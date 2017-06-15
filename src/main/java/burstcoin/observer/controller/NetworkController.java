@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 by luxe - https://github.com/de-luxe - BURST-LUXE-RED2-G6JW-H4HG5
+ * Copyright (c) 2017 by luxe - https://github.com/de-luxe - BURST-LUXE-RED2-G6JW-H4HG5
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -54,6 +54,7 @@ public class NetworkController
     networkBeans = new ArrayList<>();
     lastUpdate = new Date();
     lastBlockWithSameGenSig = 0L;
+    multiSenkeyData = new ArrayList<>();
   }
 
   @EventListener
@@ -71,12 +72,11 @@ public class NetworkController
     addNavigationBean(NavigationPoint.NETWORK, model);
 
     model.addAttribute("lastUpdate", (new Date().getTime() - lastUpdate.getTime()) / 1000);
-    model.addAttribute("refreshContent", ObserverProperties.getNetworkRefreshInterval() / 1000 + 1 + "; URL=" + ObserverProperties.getObserverUrl());
+    model.addAttribute("refreshContent", ObserverProperties.getNetworkRefreshInterval() / 1000 + 1);
     model.addAttribute("interval", ObserverProperties.getNetworkRefreshInterval() / 1000);
-    if(networkBeans != null)
-    {
+
       model.addAttribute("networkBeans", networkBeans);
-    }
+
     model.addAttribute("multiSenkeyData", multiSenkeyData);
     model.addAttribute("lastBlockWithSameGenSig", "Last block with same GenerationSignature: " + lastBlockWithSameGenSig);
 

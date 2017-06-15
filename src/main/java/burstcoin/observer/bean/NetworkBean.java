@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 by luxe - https://github.com/de-luxe - BURST-LUXE-RED2-G6JW-H4HG5
+ * Copyright (c) 2017 by luxe - https://github.com/de-luxe - BURST-LUXE-RED2-G6JW-H4HG5
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -46,6 +46,7 @@ public class NetworkBean
     this.generationSignature = "";
     this.targetDeadline = "";
     this.available = false;
+    this.url = domain;
   }
 
   public NetworkBean(String height, String domain, String url, String baseTarget, String generationSignature, String targetDeadline, String https)
@@ -61,7 +62,7 @@ public class NetworkBean
 
     // week impl. wallet with pool in domain will show up as pool
     this.type = targetDeadline.equals("0") ? domain.contains("faucet") ? "Faucet" : domain.contains("pool") ? "Pool" : "Wallet" : "Pool";
-    if(domain.contains("neon"))
+    if(domain.contains("neon") || domain.contains("btfg"))
     {
       this.type = "Pool";
     }
@@ -121,5 +122,29 @@ public class NetworkBean
   public Boolean getAvailable()
   {
     return available;
+  }
+
+  @Override
+  public boolean equals(Object o)
+  {
+    if(this == o)
+    {
+      return true;
+    }
+    if(!(o instanceof NetworkBean))
+    {
+      return false;
+    }
+
+    NetworkBean that = (NetworkBean) o;
+
+    return domain.equals(that.domain);
+
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return domain.hashCode();
   }
 }

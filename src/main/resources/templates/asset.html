@@ -5,7 +5,7 @@
     <head>
         <title>Burstcoin Assets</title>
 
-        <meta http-equiv="refresh" th:content="${refreshContent}"/>
+        <meta http-equiv="refresh" th:content="${refreshContent}+'; URL=/asset'"/>
         <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/style.css}"/>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -26,7 +26,7 @@
                 for(i = 0; i < assetCandleStickBeans.length; i++)
                 {
                     var candlestickBean = assetCandleStickBeans[i];
-                    if(candlestickBean.asset+"x" == id)
+                    if(candlestickBean.asset + "x" == id)
                     {
                         drawChart(candlestickBean);
                     }
@@ -43,8 +43,8 @@
                         backgroundColor: {fill: 'transparent', strokeWidth: 0},
                         chartArea: {left: 70, top: 10, width: '100%', height: '260px'},
                         candlestick: {
-                            fallingColor: {strokeWidth: 0, fill: '#a52714'}, // red
-                            risingColor: {strokeWidth: 0, fill: '#0f9d58'}   // green
+                            fallingColor: {strokeWidth: 0, fill: '#0f9d58'},
+                            risingColor: {strokeWidth: 0, fill: '#a52714'}
                         },
                         hAxis: {title: 'Days ago (360 blocks per day / 24h)', titleTextStyle: {color: '#000000'}, showTextEvery: 2},
                         vAxis: {title: 'Price in BURST', titleTextStyle: {color: '#000000'}}
@@ -112,7 +112,8 @@
                             <tr>
                                 <td th:text="${assetBean.description}" colspan="8"></td>
                                 <td colspan="1" style="vertical-align: bottom;">
-                                    <span th:id="${assetBean.asset} + 'x'" class="btn btn-secondary" role="button" onclick="showChart(this.id)">Show chart</span>
+                                    <span th:id="${assetBean.asset} + 'x'" class="btn btn-secondary" role="button"
+                                          onclick="showChart(this.id)">Show chart</span>
                                 </td>
                             </tr>
                             <tr>
@@ -123,6 +124,11 @@
                         </div>
                     </tbody>
                 </table>
+            </div>
+
+            <br/>
+            <div class="alert alert-info">
+                You like this page? Please donate some BURST to support future development <strong>BURST-LUXE-RED2-G6JW-H4HG5</strong>
             </div>
         </div>
 

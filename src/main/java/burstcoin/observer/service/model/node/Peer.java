@@ -20,76 +20,77 @@
  *
  */
 
-package burstcoin.observer.service.model.asset;
+package burstcoin.observer.service.model.node;
 
-import java.io.Serializable;
+import burstcoin.observer.service.model.IsResponse;
 
-public class Order
-  implements Serializable
+public class Peer
+  extends IsResponse
 {
-  private String asset;
-  private String order;
-  private String type;
+  protected long lastUpdated; // 84020113,
+  protected long downloadedVolume; //  11421691,
+  protected boolean blacklisted; //  false,
+  protected String announcedAddress; //  "burst.ninja",
+  protected String application; //  "NRS",
+  protected int weight; // 0,
+  protected long uploadedVolume; //  29180702,
+  protected int state; //  1,
+  protected String version; //  "1.2.7",
+  protected String platform; //  "FreeBSD",
+  protected boolean shareAddress; //  true
 
-  private String quantityQNT;
-  private String priceNQT;
-  private String accountRS;
-  private String account;
-  private long height;
-
-  protected Order()
+  public long getLastUpdated()
   {
+    return lastUpdated;
   }
 
-  public Order(String asset, String order, String type, String quantityQNT, String priceNQT, String accountRS, String account, long height)
+  public long getDownloadedVolume()
   {
-    this.asset = asset;
-    this.order = order;
-    this.type = type;
-    this.quantityQNT = quantityQNT;
-    this.priceNQT = priceNQT;
-    this.accountRS = accountRS;
-    this.account = account;
-    this.height = height;
+    return downloadedVolume;
   }
 
-  public String getAsset()
+  public boolean isBlacklisted()
   {
-    return asset;
+    return blacklisted;
   }
 
-  public String getOrder()
+  public String getAnnouncedAddress()
   {
-    return order;
+    return announcedAddress;
   }
 
-  public String getType()
+  public String getApplication()
   {
-    return type;
+    return application;
   }
 
-  public String getQuantityQNT()
+  public int getWeight()
   {
-    return quantityQNT;
+    return weight;
   }
 
-  public String getPriceNQT()
+  public long getUploadedVolume()
   {
-    return priceNQT;
+    return uploadedVolume;
   }
 
-  public String getAccountRS()
+  public int getState()
   {
-    return accountRS;
+    return state;
   }
 
-  public String getAccount()
+  public String getVersion()
   {
-    return account;
+    return version;
   }
 
-  public long getHeight()
+  public String getPlatform()
   {
-    return height;
+    return platform;
+  }
+
+  public boolean isShareAddress()
+  {
+    return shareAddress;
   }
 }

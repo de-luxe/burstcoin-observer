@@ -3,7 +3,7 @@ Burstcoin-Observer is a Web-Application and Server bundled in a single jar.
 The Web-Application provides a overview on different aspects within the Burstcoin network, including pools and crowdfund.
 
 ## Features:
-- Provides Network, Pool, Asset and Crowdfund Overview
+- Provides Network, Pool, Node, Asset and Crowdfund Overview
 - Easy to run with included standalone tomcat server.
 - All Data available via API for JSON and JSONP
 - Allows using Proxy and  Google Analytics 
@@ -13,6 +13,7 @@ The Web-Application provides a overview on different aspects within the Burstcoi
 ## Requirements:
 - java8
 - Burstcoin wallet
+- google maps API key
 
 ## Setup:
 - Edit 'observer.properties' (e.g. rename observer.default.properties) 

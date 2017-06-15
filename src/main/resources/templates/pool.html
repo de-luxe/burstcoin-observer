@@ -5,7 +5,7 @@
     <head>
         <title>Burstcoin Pools</title>
 
-        <meta http-equiv="refresh" th:content="${refreshContent}"/>
+        <meta http-equiv="refresh" th:content="${refreshContent}+'; URL=/pool'"/>
         <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/style.css}"/>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -103,6 +103,10 @@
                 <p class="lead">The stats are not 100% correct.<br/>All found blocks of a miner, within the 10 days period, are counted for the pool a miner is
                     currently assigned to.</p>
 
+                <br/>
+                <div class="alert alert-info">
+                    You like this page? Please donate some BURST to support future development <strong>BURST-LUXE-RED2-G6JW-H4HG5</strong>
+                </div>
             </div>
         </div>
 

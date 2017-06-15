@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 by luxe - https://github.com/de-luxe - BURST-LUXE-RED2-G6JW-H4HG5
+ * Copyright (c) 2017 by luxe - https://github.com/de-luxe - BURST-LUXE-RED2-G6JW-H4HG5
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -60,6 +60,8 @@ public class ObserverProperties
   private static Integer poolRefreshInterval;
   private static Integer assetRefreshInterval;
   private static Integer crowdfundRefreshInterval;
+  private static Integer nodeRefreshInterval;
+  private static String nodeGoogleMapsApiKey;
   private static Integer connectionTimeout;
   private static List<String> networkServers;
 
@@ -86,6 +88,15 @@ public class ObserverProperties
       mailReceiver = asString("burstcoin.observer.mail.receiver", "");
     }
     return mailReceiver;
+  }
+
+  public static String getNodeGoogleMapsApiKey()
+  {
+    if(nodeGoogleMapsApiKey == null)
+    {
+      nodeGoogleMapsApiKey = asString("burstcoin.observer.node.google.maps.api.key", "");
+    }
+    return nodeGoogleMapsApiKey;
   }
   
   public static String getMailSender()
@@ -261,6 +272,15 @@ public class ObserverProperties
       networkRefreshInterval = asInteger("burstcoin.observer.network.refreshInterval", 8000);
     }
     return networkRefreshInterval;
+  }
+
+  public static Integer getNodeRefreshInterval()
+  {
+    if(nodeRefreshInterval == null)
+    {
+      nodeRefreshInterval = asInteger("burstcoin.observer.node.refreshInterval", 1000 * 60 * 30);
+    }
+    return nodeRefreshInterval;
   }
 
   public static Integer getPoolRefreshInterval()

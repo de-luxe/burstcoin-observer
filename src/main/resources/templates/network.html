@@ -9,7 +9,7 @@
 
         <title>Burstcoin Network</title>
 
-        <meta http-equiv="refresh" th:content="${refreshContent}"/>
+        <meta http-equiv="refresh" th:content="${refreshContent}+'; URL=/network'"/>
         <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/style.css}"/>
 
         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -53,8 +53,6 @@
                 var chart = new google.visualization.Sankey(document.getElementById('sankey_multiple'));
                 chart.draw(data, options);
             }
-
-
 
             /*]]>*/
         </script>
@@ -110,13 +108,18 @@
                     This list does not contain all nodes of Burstcoin network, only a manual configured subset.
                 </p>
 
-                <div style="width: 100%; height: 230px; overflow-x: scroll; overflow-y: visible">
+                <div style="width: 100%; height: 230px;">
                     <div id="sankey_multiple"></div>
                 </div>
 
                 <p class="lead">
-                    The above chart shows the block transitions of nodes, weight by amount of nodes. This is a experimental feature.
+                    The above chart shows the block transitions of nodes, weight by amount of nodes. Based on the data received by this page.
                 </p>
+
+                <br/>
+                <div class="alert alert-info">
+                    You like this page? Please donate some BURST to support future development <strong>BURST-LUXE-RED2-G6JW-H4HG5</strong>
+                </div>
 
             </div>
         </div>

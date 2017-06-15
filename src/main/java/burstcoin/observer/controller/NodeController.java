@@ -22,10 +22,14 @@
 
 package burstcoin.observer.controller;
 
+
 import burstcoin.observer.ObserverProperties;
-import burstcoin.observer.bean.CrowdfundBean;
 import burstcoin.observer.bean.NavigationPoint;
-import burstcoin.observer.event.CrowdfundUpdateEvent;
+import burstcoin.observer.bean.NodeListBean;
+import burstcoin.observer.bean.NodeStats;
+import burstcoin.observer.event.NodeUpdateEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.stereotype.Controller;
@@ -40,57 +44,72 @@ import java.util.Date;
 import java.util.List;
 
 @Controller
-public class CrowdfundController
+public class NodeController
   extends BaseController
 {
-  private List<CrowdfundBean> crowdfundBeans;
+  @Autowired
+  private ObjectMapper objectMapper;
+
+  private List<NodeListBean> nodeBeans;
   private Date lastUpdate;
+  private List<List> geoData;
+  private NodeStats nodeStats;
+  private List<List> mapData;
 
   @PostConstruct
   public void init()
   {
-    crowdfundBeans = new ArrayList<>();
+    nodeBeans = new ArrayList<>();
     lastUpdate = new Date();
+    geoData = new ArrayList<>();
+    mapData = new ArrayList<>();
+    nodeStats = new NodeStats(0,0,"");
   }
 
   @EventListener
-  public void handleMessage(CrowdfundUpdateEvent event)
+  public void handleMessage(NodeUpdateEvent event)
   {
-    crowdfundBeans = event.getCrowdfundBeans();
+    nodeBeans = event.getNodes();
     lastUpdate = event.getLastUpdate();
+    geoData = event.getGeoData();
+    nodeStats = event.getNodeStats();
+    mapData = event.getMapData();
   }
 
-  @RequestMapping({"/crowdfund"})
-  public String index(Model model)
+  @RequestMapping("/node")
+  public String pool(Model model)
   {
-    addNavigationBean(NavigationPoint.CROWDFUND, model);
+    addNavigationBean(NavigationPoint.NODE, model);
 
     model.addAttribute("lastUpdate", (new Date().getTime() - lastUpdate.getTime()) / 1000);
-    model.addAttribute("refreshContent",
-                       ObserverProperties.getCrowdfundRefreshInterval() / 1000 + 1);
-    model.addAttribute("interval", ObserverProperties.getCrowdfundRefreshInterval() / 1000);
-    if(crowdfundBeans != null)
-    {
-      model.addAttribute("crowdfundBeans", crowdfundBeans);
-    }
+    model.addAttribute("refreshContent", ObserverProperties.getNodeRefreshInterval() / 1000 + 1);
+    model.addAttribute("interval", ObserverProperties.getNodeRefreshInterval() / 1000);
 
-    return "crowdfund";
+    model.addAttribute("nodeBeans", nodeBeans);
+    model.addAttribute("geoData", geoData);
+    model.addAttribute("mapData", mapData);
+    model.addAttribute("nodeStats", nodeStats);
+
+    model.addAttribute("googleMapsApiKey", ObserverProperties.getNodeGoogleMapsApiKey());
+
+    return "node";
   }
 
-  @RequestMapping(value = "/crowdfund/json", produces = "application/json")
+  @RequestMapping(value = "/node/json", produces = "application/json")
   @ResponseBody
-  public List<CrowdfundBean> json()
+  public List<NodeListBean> json()
   {
-    return crowdfundBeans != null ? crowdfundBeans : new ArrayList<>();
+    return nodeBeans;
   }
 
-  @RequestMapping(value = "/crowdfund/jsonp", produces = "application/json")
+  @RequestMapping(value = "/node/jsonp", produces = "application/json")
   @ResponseBody
   public MappingJacksonValue jsonp(@RequestParam String callback)
   {
     callback = callback == null || callback.equals("") ? "callback" : callback;
-    MappingJacksonValue value = new MappingJacksonValue(crowdfundBeans != null ? crowdfundBeans : new ArrayList<>());
+    MappingJacksonValue value = new MappingJacksonValue(nodeBeans);
     value.setJsonpFunction(callback);
     return value;
   }
 }
+

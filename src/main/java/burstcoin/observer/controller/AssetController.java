@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 by luxe - https://github.com/de-luxe - BURST-LUXE-RED2-G6JW-H4HG5
+ * Copyright (c) 2017 by luxe - https://github.com/de-luxe - BURST-LUXE-RED2-G6JW-H4HG5
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -53,6 +53,7 @@ public class AssetController
   {
     assetBeans = new ArrayList<>();
     lastUpdate = new Date();
+    assetCandleStickBeans = new ArrayList<>();
   }
 
   @EventListener
@@ -69,7 +70,7 @@ public class AssetController
     addNavigationBean(NavigationPoint.ASSET, model);
 
     model.addAttribute("lastUpdate", (new Date().getTime() - lastUpdate.getTime()) / 1000);
-    model.addAttribute("refreshContent", ObserverProperties.getAssetRefreshInterval() / 1000 + 1 + "; URL=" + ObserverProperties.getObserverUrl() + "/asset");
+    model.addAttribute("refreshContent", ObserverProperties.getAssetRefreshInterval() / 1000 + 1);
     model.addAttribute("interval", ObserverProperties.getAssetRefreshInterval() / 1000);
     if(assetBeans != null)
     {

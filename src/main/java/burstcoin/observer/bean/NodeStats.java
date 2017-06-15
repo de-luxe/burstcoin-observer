@@ -20,33 +20,37 @@
  *
  */
 
-package burstcoin.observer.event;
+package burstcoin.observer.bean;
 
-
-import burstcoin.observer.bean.PoolBean;
-
-import java.util.Date;
-import java.util.List;
-
-public class PoolUpdateEvent
+/**
+ * todo add some stats
+ */
+public class NodeStats
 {
-  private List<PoolBean> poolBeans;
-  private Date lastUpdate;
+  private int nodeCount; // found active from wallet
+  private int activeNodeCount; // last update within 24h
 
-  public PoolUpdateEvent(List<PoolBean> poolBeans)
+  private String peers;
+
+  public NodeStats(int nodeCount, int activeNodeCount, String peers)
   {
-    lastUpdate = new Date();
-
-    this.poolBeans = poolBeans;
+    this.nodeCount = nodeCount;
+    this.activeNodeCount = activeNodeCount;
+    this.peers = peers;
   }
 
-  public List<PoolBean> getPoolBeans()
+  public String getPeers()
   {
-    return poolBeans;
+    return peers;
   }
 
-  public Date getLastUpdate()
+  public int getActiveNodeCount()
   {
-    return lastUpdate;
+    return activeNodeCount;
+  }
+
+  public int getNodeCount()
+  {
+    return nodeCount;
   }
 }

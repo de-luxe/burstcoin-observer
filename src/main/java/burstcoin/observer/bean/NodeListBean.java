@@ -20,33 +20,92 @@
  *
  */
 
-package burstcoin.observer.event;
+package burstcoin.observer.bean;
 
-
-import burstcoin.observer.bean.PoolBean;
 
 import java.util.Date;
-import java.util.List;
 
-public class PoolUpdateEvent
+public class NodeListBean
 {
-  private List<PoolBean> poolBeans;
+  private String announcedAddress;
+  private String ip;
+  private String version;
+  private String platform;
+
+  private String country;
+  private String region;
+  private String city;
+
   private Date lastUpdate;
+  private String updated;
 
-  public PoolUpdateEvent(List<PoolBean> poolBeans)
+  private String isp;
+
+  public NodeListBean(Date lastUpdate, String announcedAddress, String ip, String version, String platform, String country, String region, String city, String isp)
   {
-    lastUpdate = new Date();
-
-    this.poolBeans = poolBeans;
+    this.lastUpdate = lastUpdate;
+    this.announcedAddress = announcedAddress;
+    this.ip = ip;
+    this.version = version;
+    this.platform = platform;
+    this.country = country;
+    this.region = region;
+    this.city = city;
+    this.isp = isp;
   }
 
-  public List<PoolBean> getPoolBeans()
+  public String getUpdated()
   {
-    return poolBeans;
+    return updated;
+  }
+
+  public void setUpdated(String updated)
+  {
+    this.updated = updated;
   }
 
   public Date getLastUpdate()
   {
     return lastUpdate;
+  }
+
+  public String getAnnouncedAddress()
+  {
+    return announcedAddress;
+  }
+
+  public String getIp()
+  {
+    return ip;
+  }
+
+  public String getVersion()
+  {
+    return version;
+  }
+
+  public String getPlatform()
+  {
+    return platform;
+  }
+
+  public String getCountry()
+  {
+    return country;
+  }
+
+  public String getRegion()
+  {
+    return region;
+  }
+
+  public String getCity()
+  {
+    return city;
+  }
+
+  public String getIsp()
+  {
+    return isp;
   }
 }

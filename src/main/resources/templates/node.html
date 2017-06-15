@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+
+<html xmlns:th="http://www.thymeleaf.org">
+
+    <head>
+        <title>Burstcoin Nodes</title>
+
+        <meta http-equiv="refresh" th:content="${refreshContent}+'; URL=/node'"/>
+        <link rel="stylesheet" type="text/css" media="all" th:href="@{/css/style.css}"/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script type="text/javascript" th:inline="javascript">
+            /*<![CDATA[*/
+
+            /*[+
+             var apiKey = [[${googleMapsApiKey}]];
+             var data  = [[${geoData}]];
+             +]*/
+
+            google.charts.load('current', {'mapsApiKey': apiKey, 'packages': ['geochart', 'map']});
+            google.charts.setOnLoadCallback(drawRegionsMap);
+
+            var region = true;
+
+            function drawRegionsMap()
+            {
+
+              region = true;
+              document.getElementById('switchmaps').innerHTML = 'Switch to Geolocation Map';
+
+              var geoData = google.visualization.arrayToDataTable(data);
+
+              var options = {
+                displayMode: 'regions',
+                colorAxis: {colors: ['#DCDCDC', '#383838']},
+                datalessRegionColor: 'white',
+                backgroundColor: {fill: 'transparent'}
+              };
+
+              var chart = new google.visualization.GeoChart(document.getElementById('map_div'));
+
+              chart.draw(geoData, options);
+            }
+
+            /*[+
+             var mapData  = [[${mapData}]];
+             +]*/
+
+            function drawMap()
+            {
+
+              region = false;
+              document.getElementById('switchmaps').innerHTML = 'Switch to Region Map';
+
+
+              var mapDataTable = google.visualization.arrayToDataTable(mapData);
+
+              var options = {
+                showTooltip: true,
+                showInfoWindow: true
+              };
+
+              var map = new google.visualization.Map(document.getElementById('map_div'));
+
+              map.draw(mapDataTable, options);
+            }
+
+            /*]]>*/
+        </script>
+
+    </head>
+
+    <body>
+        <div class="container">
+
+            <div th:include="navigation"></div>
+
+            <div class="jumbotron">
+                <h1 class="display-3">Burstcoin Nodes</h1>
+
+                <p class="lead">This page updates every <span th:text="${interval / 60}"></span> minutes. (Data updated <span
+                        th:text="${lastUpdate / 60}"></span> minutes ago.)<br/>
+                    And provides info about the <b><span th:text="${nodeStats.activeNodeCount}"></span> detected public Burstcoin nodes, found updated within the last
+                        hour.</b></p>
+                <div id="map_div" style="width: 100%; height: 500px;"></div>
+                <div style="width: 100%; text-align: right;  margin-top: 5px; margin-bottom: 5px;">
+                    <span id="switchmaps" class="btn btn-secondary" role="button" onclick="if(region){drawMap();}else{drawRegionsMap();}">Switch to Geolocation Map</span>
+                </div>
+
+                <table class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>IP</th>
+                            <th>Version</th>
+                            <th>Platform</th>
+                            <th>Updated Before</th>
+                            <th>Country</th>
+                            <th>Region</th>
+                            <th>City</th>
+                            <th>Provider</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="nodeBean,iterStat : ${nodeBeans}" data-toggle="tooltip" th:title="${nodeBean.ip} + ' - ' + ${nodeBean.announcedAddress}">
+                            <td th:text="${#strings.abbreviate(nodeBean.ip, 18)}"></td>
+                            <td th:text="${nodeBean.version}"></td>
+                            <td th:text="${#strings.abbreviate(nodeBean.platform,10)}"></td>
+                            <td th:text="${nodeBean.updated}"></td>
+                            <th scope="row" th:text="${nodeBean.country}"></th>
+                            <td th:text="${nodeBean.region}"></td>
+                            <td th:text="${nodeBean.city}"></td>
+                            <td th:text="${nodeBean.isp}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p class="lead">The Nodes are collected from the Wallets shown under Network.</p>
+                <br/>
+                <div class="alert alert-success">
+                    Please support Burstcoin by running a <strong>public node</strong> with latest wallet version ... <a class="alert-link" target="_blank"
+                                                                                                                         href="https://github.com/burst-team/burstcoin/releases">Download
+                    from github!</a><br/>
+                    Create a file with following content within /conf dir, named nxt.properties, where <strong>X.X.X.X</strong> is your host IP
+                    address:<br/><br/>
+                    nxt.myAddress=<strong>X.X.X.X</strong><br/>
+                    nxt.allowedBotHosts=127.0.0.1; localhost; <strong>X.X.X.X</strong>; 0:0:0:0:0:0:0:1;<br/>
+                    nxt.allowedUserHosts=127.0.0.1; localhost; <strong>X.X.X.X</strong>; 0:0:0:0:0:0:0:1;<br/>
+                    <span th:text="${nodeStats.peers}"></span>
+                </div>
+                <br/>
+                <div class="alert alert-info">
+                    You like this page? Please donate some BURST to support future development <strong>BURST-LUXE-RED2-G6JW-H4HG5</strong>
+                </div>
+            </div>
+        </div>
+
+    </body>
+</html>

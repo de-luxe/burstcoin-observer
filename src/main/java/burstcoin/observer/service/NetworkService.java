@@ -126,15 +126,10 @@ public class NetworkService
   {
     synchronized(miningInfoLookup)
     {
-      MiningInfo miningInfo = miningInfoEvent.getMiningInfo();
-      if(miningInfo != null)
-      {
-        miningInfoLookup.put(miningInfoEvent.getNetworkServerUrl(), miningInfo);
-      }
-      else
-      {
-        miningInfoLookup.put(miningInfoEvent.getNetworkServerUrl(), null);
-      }
+      miningInfoLookup.put(miningInfoEvent.getNetworkServerUrl(), miningInfoEvent.getMiningInfo());
+
+      LOG.debug("MiningInfo:" + miningInfoEvent.getNetworkServerUrl() + " #" + miningInfoLookup.size() + "/" + ObserverProperties.getNetworkServerUrls().size());
+
       if(ObserverProperties.getNetworkServerUrls().size() == miningInfoLookup.size())
       {
         LOG.info("Received MiningInfo from all newtworkServerUrls ...");

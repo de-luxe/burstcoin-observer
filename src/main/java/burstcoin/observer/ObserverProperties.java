@@ -32,8 +32,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 public class ObserverProperties
 {
@@ -81,6 +83,8 @@ public class ObserverProperties
   private static Integer proxyPort;
   private static String proxyHost;
 
+  private static Boolean enableTemplateCaching;
+
   public static String getMailReceiver()
   {
     if(mailReceiver == null)
@@ -98,16 +102,16 @@ public class ObserverProperties
     }
     return nodeGoogleMapsApiKey;
   }
-  
+
   public static String getMailSender()
   {
     if(mailSender == null)
     {
-	  mailSender = asString("burstcoin.observer.mail.sender", "");
+      mailSender = asString("burstcoin.observer.mail.sender", "");
     }
     return mailSender;
   }
-  
+
   public static String getMailReplyTo()
   {
     if(mailReplyTo == null)
@@ -179,7 +183,7 @@ public class ObserverProperties
     }
     return enableForkNotify;
   }
-  
+
   public static boolean isEnableStuckNotify()
   {
     if(enableStuckNotify == null)
@@ -187,6 +191,15 @@ public class ObserverProperties
       enableStuckNotify = asBoolean("burstcoin.observer.mail.enableStuckNotify", false);
     }
     return enableStuckNotify;
+  }
+
+  public static boolean isEnableTemplateCaching()
+  {
+    if(enableTemplateCaching == null)
+    {
+      enableTemplateCaching = asBoolean("burstcoin.observer.enableTemplateCaching", false);
+    }
+    return enableTemplateCaching;
   }
 
   public static boolean isUseSocksProxy()
@@ -354,20 +367,31 @@ public class ObserverProperties
   private static List<String> asStringList(String key, List<String> defaultValue)
   {
     String stringListProperty = PROPS.containsKey(key) ? String.valueOf(PROPS.getProperty(key)) : null;
-    List<String> value = null;
+    List<String> entries = null;
     if(!StringUtils.isEmpty(stringListProperty))
     {
       try
       {
-        value = Arrays.asList(stringListProperty.trim().split(STRING_LIST_PROPERTY_DELIMITER));
+        entries = new ArrayList<>();
+        // remove double entries
+        for(String entry : Arrays.asList(stringListProperty.trim().split(STRING_LIST_PROPERTY_DELIMITER)))
+        {
+          if(!entries.contains(entry))
+          {
+            entries.add(entry);
+          }
+          else
+          {
+            LOG.info("Duplicate removed: " + entry);
+          }
+        }
       }
       catch(NullPointerException | NumberFormatException e)
       {
         LOG.error("property: '" + key + "' value should be 'string(s)' separated by '" + STRING_LIST_PROPERTY_DELIMITER + "' (comma).");
       }
     }
-
-    return value != null ? value : defaultValue;
+    return entries != null ? entries : defaultValue;
   }
 
   private static Boolean asBoolean(String key, boolean defaultValue)

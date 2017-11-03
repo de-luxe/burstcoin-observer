@@ -86,7 +86,7 @@
                     <tbody>
                         <tr th:each="poolBean,iterStat : ${poolBeans}" data-toggle="tooltip" th:title="${poolBean.description}">
                             <td th:unless="${poolBean.accountRS == 'Solo-Miners'}">
-                                <a th:href="'http://burstcoin.biz/address/' + ${poolBean.accountId}" th:text="${poolBean.accountRS}"
+                                <a th:href="'https://explore.burst.cryptoguru.org/address/' + ${poolBean.accountId}" th:text="${poolBean.accountRS}"
                                    th:title="'AccountID: '+${poolBean.accountRS}" target="_blank" class="btn-link" style="color: black;"></a>
                             </td>
                             <td th:unless="${poolBean.accountRS != 'Solo-Miners'}" th:text="${poolBean.accountRS}"></td>

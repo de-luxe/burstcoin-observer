@@ -45,6 +45,7 @@ public class BaseController
 
     List<NavigationPoint> right = new ArrayList<>();
     right.add(NavigationPoint.API);
+    right.add(NavigationPoint.FAUCET);
     right.add(NavigationPoint.FORUM);
     right.add(NavigationPoint.BLOCKEX);
     right.add(NavigationPoint.GITHUB);

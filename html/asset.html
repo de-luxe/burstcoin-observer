@@ -89,7 +89,7 @@
                             <tr>
                                 <td>
                                     <span>
-                                        <a th:href="'http://burstcoin.biz/transaction/' + ${assetBean.asset}" th:text="${assetBean.asset}"
+                                        <a th:href="'https://explore.burst.cryptoguru.org/transaction/' + ${assetBean.asset}" th:text="${assetBean.asset}"
                                            th:title="'TransactionID: '+${assetBean.asset}" target="_blank" class="btn-link" style="color: black;"></a>
                                         <a th:href="'https://wallet.burst-team.us/index.html#asset:' + ${assetBean.asset}"
                                            title="Open in Asset-Exchange, using Online-Wallet." target="_blank" class="btn-link" style="color: black;">O</a>
@@ -98,7 +98,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <a th:href="'http://burstcoin.biz/address/' + ${assetBean.account}" th:text="${assetBean.name}"
+                                    <a th:href="'https://explore.burst.cryptoguru.org/address/' + ${assetBean.account}" th:text="${assetBean.name}"
                                        th:title="'Issuer AccountID: '+${assetBean.accountRS}" target="_blank" class="btn-link" style="color: black;"></a>
                                 </td>
                                 <td th:text="${assetBean.numberOfAccounts}"></td>

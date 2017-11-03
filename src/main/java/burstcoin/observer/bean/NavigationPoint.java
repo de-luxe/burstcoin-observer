@@ -31,8 +31,9 @@ public enum NavigationPoint
   CROWDFUND("Crowdfund", "/crowdfund"),
 
   API("API", "/api"),
+  FAUCET("Faucet", "http://burstcoin.cc:3333"),
   FORUM("Forum", "https://forums.burst-team.us"),
-  BLOCKEX("Block-Explorer", "http://burstcoin.biz"),
+  BLOCKEX("Block-Explorer", "https://explore.burst.cryptoguru.org"),
   GITHUB("Github", "https://github.com/de-luxe/burstcoin-network-observer/releases");
 
   private String href;

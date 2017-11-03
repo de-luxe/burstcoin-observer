@@ -135,6 +135,7 @@ public class Observer
     properties.put("spring.mail.port", ObserverProperties.getMailPort());
     properties.put("spring.mail.username", ObserverProperties.getMailUsername());
     properties.put("spring.mail.password", ObserverProperties.getMailPassword());
+    properties.put("spring.thymeleaf.cache",ObserverProperties.isEnableTemplateCaching());
 
     new SpringApplicationBuilder(Observer.class)
       .properties(properties)

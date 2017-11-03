@@ -75,7 +75,7 @@ public class PoolController
     model.addAttribute("lastUpdate", (new Date().getTime() - lastUpdate.getTime()) / 1000);
     model.addAttribute("refreshContent", ObserverProperties.getPoolRefreshInterval() / 1000 + 1);
     model.addAttribute("interval", ObserverProperties.getPoolRefreshInterval() / 1000);
-    if(poolBeans != null)
+    if(poolBeans != null && !poolBeans.isEmpty())
     {
       model.addAttribute("poolBeans", poolBeans);
 

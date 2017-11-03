@@ -6,13 +6,13 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>1.5.4.RELEASE</version>
+    <version>1.5.8.RELEASE</version>
   </parent>
 
   <name>burstcoin-observer</name>
   <groupId>burstcoin</groupId>
   <artifactId>burstcoin-observer</artifactId>
-  <version>0.2.8-RELEASE</version>
+  <version>0.2.9-SNAPSHOT</version>
 
   <properties>
     <java.version>1.8</java.version>
@@ -100,6 +100,9 @@
                 <copy file="${project.basedir}/README.md" tofile="${project.basedir}/dist/tmp/README.txt"/>
                 <copy file="${project.basedir}/run.bat" tofile="${project.basedir}/dist/tmp/run.sh"/>
                 <copy file="${project.basedir}/run.bat" tofile="${project.basedir}/dist/tmp/run.bat"/>
+                <copy todir="${project.basedir}/dist/tmp/html" >
+                  <fileset dir="${project.basedir}/html"/>
+                </copy>
                 <!-- create zip file -->
                 <zip destfile="${project.basedir}/dist/${project.build.finalName}.zip" basedir="${project.basedir}/dist/tmp"/>
               </target>

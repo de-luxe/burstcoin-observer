@@ -62,7 +62,11 @@ public class NetworkBean
 
     // week impl. wallet with pool in domain will show up as pool
     this.type = targetDeadline.equals("0") ? domain.contains("faucet") ? "Faucet" : domain.contains("pool") ? "Pool" : "Wallet" : "Pool";
-    if(domain.contains("neon") || domain.contains("btfg"))
+    if(domain.contains("burstcoin.cc:3333"))
+    {
+      this.type = "Faucet";
+    }
+    if(domain.contains("neon") || domain.contains("btfg") || domain.contains("burst.cryptoguru.org") || domain.contains("5y.dk:8100"))
     {
       this.type = "Pool";
     }

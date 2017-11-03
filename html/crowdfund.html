@@ -36,7 +36,7 @@
                         <div th:each="crowdfundBean,iterStat : ${crowdfundBeans}">
                             <tr>
                                 <td>
-                                    <a th:href="'http://burstcoin.biz/address/' + ${crowdfundBean.at}" th:text="${crowdfundBean.atRS}"
+                                    <a th:href="'https://explore.burst.cryptoguru.org/address/' + ${crowdfundBean.at}" th:text="${crowdfundBean.atRS}"
                                        th:title="'AccountID: '+ ${crowdfundBean.atRS}" target="_blank" class="btn-link" style="color: black;"></a>
                                 </td>
                                 <td th:text="${crowdfundBean.name}" th:title="${crowdfundBean.fullName}"></td>
